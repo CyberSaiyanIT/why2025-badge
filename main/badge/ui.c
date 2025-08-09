@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "led.h"
 
+bool loop_rainbow = false;
 enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, NUM_SCREENS};
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
@@ -55,6 +56,8 @@ static bool ui_update_backlight(bool trigger)
 {
     uint32_t span = lv_tick_get() - last_trigger;
 
+    if (loop_rainbow)
+        rainbow();
     if (trigger)
     {
         set_screen_led_backlight(badge_obj.brightness_max);
@@ -185,7 +188,7 @@ void ui_button_down()
         // Call rainbow() function when on SCREEN_LOGO (index 0)
         if (current_screen == SCREEN_LOGO) {
             ESP_LOGI("UI", "Rainbow sequence activated!");
-            rainbow();
+            loop_rainbow = !loop_rainbow;
         }        
         
         // Reset the counter after reaching 7
