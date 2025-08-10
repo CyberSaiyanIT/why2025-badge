@@ -31,13 +31,14 @@
 // #define SCREEN_BRIGHT_OFF 0
 
 #define BRIGHT_MID_TIMEOUT_MS 5000
-#define BRIGHT_OFF_TIMEOUT_MS 15000
+#define BRIGHT_OFF_TIMEOUT_MS 1500 
 
 #define ADMIN_STATE_OFF 0
 #define ADMIN_STATE_AP 1
 #define ADMIN_STATE_STA 2
 
 lv_obj_t *screen_logo;  // page 0
+lv_obj_t *screen_milli;  // page 0
 lv_obj_t *screen_event; // page 1
 lv_obj_t *screen_radar; // page 2
 lv_obj_t *screen_rssi;  // page 3
