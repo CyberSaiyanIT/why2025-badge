@@ -1,11 +1,15 @@
 #include "ui.h"
 #include "led.h"
 
-enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, NUM_SCREENS};
+//enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, NUM_SCREENS};
+enum screen_order {SCREEN_LOGO, SCREEN_MILLI, SCREEN_RADAR, NUM_SCREENS, SCREEN_EVENT, SCREEN_RSSI, SCREEN_ADMIN, SCREEN_SNAKE};
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
 
 static uint32_t last_trigger = -1;
+static uint32_t last_update = -1;
+
+static uint8_t cur_screen = SCREEN_LOGO;
 
 static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
@@ -53,24 +57,16 @@ void pause_current_task(){
 
 static bool ui_update_backlight(bool trigger)
 {
-    uint32_t span = lv_tick_get() - last_trigger;
 
-    if (trigger)
-    {
+    uint32_t span = lv_tick_get() - last_update;
+
+    if (span > BRIGHT_OFF_TIMEOUT_MS) {
+        lv_scr_load(screens[(cur_screen++) % 3]);
+        vTaskDelay(pdMS_TO_TICKS(50));
+        set_screen_led_backlight(badge_obj.brightness_off);
+        vTaskDelay(pdMS_TO_TICKS(50));
         set_screen_led_backlight(badge_obj.brightness_max);
-        last_trigger = lv_tick_get();
-
-        restore_current_task();
-    }
-    else
-    {
-        if (span > BRIGHT_OFF_TIMEOUT_MS){
-            set_screen_led_backlight(badge_obj.brightness_off);
-            pause_current_task();
-        }
-        else if (span > BRIGHT_MID_TIMEOUT_MS){
-            set_screen_led_backlight(badge_obj.brightness_mid);
-        }
+        last_update = lv_tick_get();
     }
 
     /* Avoid doing action when backlight off */
@@ -450,6 +446,22 @@ void ui_screen_splash_init(){
     screens[SCREEN_LOGO] = screen_logo;
 }
 
+void ui_screen_milli_init(){
+    LV_IMG_DECLARE(img_milli);
+
+    screen_milli = lv_obj_create(NULL, NULL);
+    lv_obj_t *logo = lv_img_create(screen_milli, NULL);
+    lv_img_set_src(logo, &img_milli);
+    lv_obj_align(logo, NULL, LV_ALIGN_CENTER, 0, 0);
+  /*Change the logo's background color*/
+    static lv_style_t style;
+    lv_style_init(&style);
+    lv_style_set_bg_opa(&style, LV_STATE_DEFAULT, LV_OPA_COVER);
+    lv_style_set_bg_color(&style, LV_STATE_DEFAULT, LV_COLOR_MAKE(0x34, 0x3a, 0x40));
+    lv_obj_add_style(logo, LV_OBJ_PART_MAIN, &style);
+
+    screens[SCREEN_MILLI] = screen_milli;
+}
 void ui_screen_radar_init(){
     // Page for radar
     LV_IMG_DECLARE(img_radar);
@@ -457,8 +469,21 @@ void ui_screen_radar_init(){
     screen_radar = lv_obj_create(NULL, NULL);
     lv_obj_t *img = lv_img_create(screen_radar, NULL);
     lv_img_set_src(img, &img_radar);
-    lv_obj_align(img, NULL, LV_ALIGN_IN_TOP_LEFT, 0, 0);
+    /* Create a style */
+    static lv_style_t style_black;
+    lv_style_init(&style_black);
 
+    /* Set background color to black */
+    lv_style_set_bg_color(&style_black, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+    lv_style_set_bg_opa(&style_black, LV_STATE_DEFAULT, LV_OPA_COVER); // Fully opaque
+
+    lv_obj_add_style(img, LV_OBJ_PART_MAIN, &style_black);
+
+    /* Resize object to fill the screen if you want full background */
+    lv_obj_set_size(img, LV_HOR_RES, LV_VER_RES);
+    lv_obj_align(img, NULL, LV_ALIGN_CENTER, 0, 0);
+
+    /*
     for (int i = 0; i < sizeof(radar_node) / sizeof(lv_obj_t *); i++)
     {
         radar_node[i] = lv_btn_create(img, NULL);
@@ -468,6 +493,7 @@ void ui_screen_radar_init(){
         radar_node_number[i] = lv_label_create(radar_node[i], NULL);
         lv_label_set_text(radar_node_number[i], "X");
     }
+    */
 
     screens[SCREEN_RADAR] = screen_radar;
 }
@@ -792,10 +818,8 @@ void ui_update_ip_info() {
 static void ui_init(void)
 {
     ui_screen_splash_init();
-
-    ui_screen_event_init();
-
     ui_screen_radar_init();
+    ui_screen_milli_init();
     
     ui_screen_rssi_init();
 
@@ -804,8 +828,8 @@ static void ui_init(void)
     ui_screen_snake_init();
     
     radar_task_handle = lv_task_create(ui_radar_task, 2000, LV_TASK_PRIO_OFF, NULL);
-    rssi_task_handle = lv_task_create(ui_rssi_task, 2000, LV_TASK_PRIO_OFF, NULL);
-    snake_task_handle = lv_task_create(snake_task, 50, LV_TASK_PRIO_OFF, NULL);
+    //rssi_task_handle = lv_task_create(ui_rssi_task, 2000, LV_TASK_PRIO_OFF, NULL);
+    //snake_task_handle = lv_task_create(snake_task, 50, LV_TASK_PRIO_OFF, NULL);
 
     // show first page.
     lv_scr_load(screens[current_screen]);
