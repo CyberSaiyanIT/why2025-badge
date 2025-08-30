@@ -37,12 +37,16 @@
 #define ADMIN_STATE_AP 1
 #define ADMIN_STATE_STA 2
 
-lv_obj_t *screen_logo;  // page 0
-lv_obj_t *screen_event; // page 1
-lv_obj_t *screen_radar; // page 2
-lv_obj_t *screen_rssi;  // page 3
-lv_obj_t *screen_snake; // page 4
-lv_obj_t *screen_admin; // page 5
+#define NAME_LABEL_SIZE 300
+
+lv_obj_t *screen_logo;          // page 0
+lv_obj_t *screen_person;        // page 1
+lv_obj_t *screen_socialenergy;  // page 2
+lv_obj_t *screen_event;         // page 3
+lv_obj_t *screen_radar;         // page 4
+lv_obj_t *screen_rssi;          // page 5
+lv_obj_t *screen_snake;         // page 6
+lv_obj_t *screen_admin;         // page 7
 
 lv_task_t* snake_task_handle;
 lv_task_t* radar_task_handle;
@@ -59,6 +63,7 @@ void ui_force_show_ip_labels();
 void ui_list_all_netifs();
 void ui_toggle_sync();
 void ui_connection_progress(uint8_t cur, uint8_t max);
+void ui_set_person(bool secret);
 
 // void ui_button_up();
 // void ui_button_down();

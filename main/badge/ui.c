@@ -1,11 +1,29 @@
 #include "ui.h"
 #include "led.h"
 
-enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, NUM_SCREENS};
+enum screen_order {
+  SCREEN_LOGO,
+  SCREEN_PERSON,
+  SCREEN_SOCIALENERGY,
+  SCREEN_EVENT,
+  SCREEN_RADAR,
+  SCREEN_RSSI,
+  SCREEN_ADMIN,
+  SCREEN_SNAKE,
+  NUM_SCREENS
+};
+const int nb_screens = 9;
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
 
 static uint32_t last_trigger = -1;
+
+static lv_obj_t *person_name;
+static lv_obj_t *person_organization;
+static lv_obj_t *person_job;
+static lv_obj_t *person_message;
+
+static lv_obj_t *socialenergy_gauge;
 
 static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
@@ -111,9 +129,10 @@ void ui_button_up()
     up_button_press_counter++;
     ESP_LOGI("UI", "UP button press count: %d on screen index: %d", up_button_press_counter, current_screen);
     
-    // Check if we've reached 7 presses
-    if (up_button_press_counter == 7) {
-        // printf("DEBUG: UP button pressed 7 times on screen %s (index: %d)\n", current_screen);
+    // Check if we've reached nb_screens presses
+    if (up_button_press_counter == nb_screens
+    ) {
+        // printf("DEBUG: UP button pressed nb_screens times on screen %s (index: %d)\n", current_screen);
         
         // Call set_completed() function when on SCREEN_LOGO (index 0)
         if (current_screen == SCREEN_LOGO) {
@@ -121,7 +140,7 @@ void ui_button_up()
             set_completed();
         }        
         
-        // Reset the counter after reaching 7
+        // Reset the counter after reaching nb_screens
         up_button_press_counter = 0;
     }
 
@@ -129,9 +148,18 @@ void ui_button_up()
     if(ui_update_backlight(true)){
         return;
     }
+    int needle_value = 0;
 
-    switch(current_screen){
-        case SCREEN_SNAKE:
+    switch (current_screen) {
+      case SCREEN_PERSON:
+            ui_set_person(true);
+            break;
+      case SCREEN_SOCIALENERGY:
+            needle_value = lv_gauge_get_value(socialenergy_gauge, 0) - 5;
+            needle_value = needle_value < 0 ? 0 : needle_value; // Low limit to 0
+            lv_gauge_set_value(socialenergy_gauge, 0, needle_value);
+        break;
+      case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(1);
             break;
@@ -154,7 +182,7 @@ void ui_button_up()
                     // Also test forcing labels to be visible for debugging
                     ui_force_show_ip_labels();
                     break;
-            }   
+            }
             break;
         case SCREEN_EVENT:
         case SCREEN_RSSI:
@@ -180,15 +208,15 @@ void ui_button_down()
     down_button_press_counter++;
     ESP_LOGI("UI", "DOWN button press count: %d on screen index: %d", down_button_press_counter, current_screen);
     
-    // Check if we've reached 7 presses
-    if (down_button_press_counter == 7) {
+    // Check if we've reached nb_screens presses
+    if (down_button_press_counter == nb_screens) {
         // Call rainbow() function when on SCREEN_LOGO (index 0)
         if (current_screen == SCREEN_LOGO) {
             ESP_LOGI("UI", "Rainbow sequence activated!");
             rainbow();
         }        
         
-        // Reset the counter after reaching 7
+        // Reset the counter after reaching nb_screens
         down_button_press_counter = 0;
     }
 
@@ -196,8 +224,19 @@ void ui_button_down()
         return;
     }
 
+    int needle_value = 0;
+
     switch(current_screen){
-        case SCREEN_SNAKE:
+      case SCREEN_PERSON:
+            ui_set_person(false);
+            break;
+      case SCREEN_SOCIALENERGY:
+            needle_value = lv_gauge_get_value(socialenergy_gauge, 0) + 5;
+            needle_value = needle_value > 100 ? 100 : needle_value; // TOP limit to 100
+            lv_gauge_set_value(socialenergy_gauge, 0, needle_value);
+        break;
+
+      case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(-1);
             break;
@@ -437,6 +476,7 @@ void ui_screen_splash_init(){
     LV_IMG_DECLARE(img_logo);
 
     screen_logo = lv_obj_create(NULL, NULL);
+
     lv_obj_t *logo = lv_img_create(screen_logo, NULL);
     lv_img_set_src(logo, &img_logo);
     lv_obj_align(logo, NULL, LV_ALIGN_CENTER, 0, 0);
@@ -448,6 +488,116 @@ void ui_screen_splash_init(){
     lv_obj_add_style(logo, LV_OBJ_PART_MAIN, &style);
 
     screens[SCREEN_LOGO] = screen_logo;
+}
+
+void ui_set_person(bool secret) {
+    if (secret == true) {
+        lv_label_set_text(person_name, badge_obj.secret_name);
+        lv_label_set_text(person_organization, badge_obj.secret_organization);
+        lv_label_set_text(person_job, badge_obj.secret_job);
+        lv_label_set_text(person_message, badge_obj.secret_message);      
+    } else {
+        lv_label_set_text(person_name, badge_obj.person_name);
+        lv_label_set_text(person_organization, badge_obj.person_organization);
+        lv_label_set_text(person_job, badge_obj.person_job);
+        lv_label_set_text(person_message, badge_obj.person_message);
+    }
+}
+
+void ui_screen_person_init() {
+    /* Styling */
+    static lv_style_t style_name;
+    lv_style_init(&style_name);
+    lv_style_set_text_font(&style_name, LV_OBJ_PART_MAIN, &lv_font_montserrat_22);
+    lv_style_set_text_decor(&style_name, LV_STATE_DEFAULT, LV_TEXT_DECOR_UNDERLINE);
+
+
+    static lv_style_t style_organization_job;
+    lv_style_init(&style_organization_job);
+    lv_style_set_text_font(&style_organization_job, LV_OBJ_PART_MAIN, &lv_font_montserrat_18);
+
+    /* Screen and labels creation */
+    screen_person = lv_obj_create(NULL, NULL);
+
+    person_name = lv_label_create(screen_person, NULL);    /*Used as a base label*/
+    lv_label_set_long_mode(person_name, LV_LABEL_LONG_BREAK);     /*Break the long lines*/
+    lv_label_set_recolor(person_name, true);                      /*Enable re-coloring by commands in the text*/
+    lv_label_set_align(person_name, LV_LABEL_ALIGN_CENTER);       /*Center aligned lines*/
+    lv_obj_set_width(person_name, NAME_LABEL_SIZE);
+    lv_obj_align(person_name, NULL, LV_ALIGN_CENTER, 0, -60);
+    
+    person_organization = lv_label_create(screen_person, person_name);
+    lv_obj_align(person_organization, NULL, LV_ALIGN_CENTER, 0, -30);
+
+    person_job = lv_label_create(screen_person, person_name);
+    lv_obj_align(person_job, NULL, LV_ALIGN_CENTER, 0, 0);
+
+    person_message = lv_label_create(screen_person, person_name);
+    lv_obj_align(person_message, NULL, LV_ALIGN_CENTER, 0, 60);
+
+    /* Setting styles */
+    lv_obj_add_style(person_name, LV_OBJ_PART_MAIN, &style_name);
+    lv_obj_add_style(person_organization, LV_OBJ_PART_MAIN, &style_organization_job);
+    lv_obj_add_style(person_job, LV_OBJ_PART_MAIN, &style_organization_job);
+    /* Stetting texts */
+    ui_set_person(false);
+    screens[SCREEN_PERSON] = screen_person;
+}
+
+void ui_screen_socialenergy_init() {
+    /* Gauge Style */
+    static lv_style_t gauge_style;
+    lv_style_init(&gauge_style);
+
+    lv_style_set_pad_inner(&gauge_style, LV_STATE_DEFAULT, 5);                  // Padding
+    
+    lv_style_set_line_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);      
+    lv_style_set_scale_grad_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+    lv_style_set_scale_end_color(&gauge_style, LV_STATE_DEFAULT, LV_COLOR_GREEN);
+
+    lv_style_set_line_width(&gauge_style, LV_STATE_DEFAULT, 2);
+    lv_style_set_scale_end_line_width(&gauge_style, LV_STATE_DEFAULT, 4);
+    lv_style_set_scale_end_border_width(&gauge_style, LV_STATE_DEFAULT, 4);
+
+    /* Needle style */
+    static lv_style_t needle_style;
+    lv_style_init(&needle_style);
+    lv_style_set_line_width(&needle_style, LV_STATE_DEFAULT, 5);
+    lv_style_set_line_color(&needle_style, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+
+    screen_socialenergy = lv_obj_create(NULL, NULL);
+    /*Describe the color for the needles*/
+    static lv_color_t needle_colors[0];
+    needle_colors[0] = LV_COLOR_BLACK;
+
+    /*Create a gauge*/
+    socialenergy_gauge = lv_gauge_create(screen_socialenergy, NULL);
+
+    lv_obj_add_style(socialenergy_gauge, LV_GAUGE_PART_MAIN, &gauge_style);
+    lv_obj_add_style(socialenergy_gauge, LV_GAUGE_PART_NEEDLE, &needle_style);
+    lv_gauge_set_needle_count(socialenergy_gauge, 1, needle_colors);
+    lv_obj_set_size(socialenergy_gauge, 180, 180);
+    lv_obj_align(socialenergy_gauge, NULL, LV_ALIGN_IN_TOP_MID, 0, 10);
+
+    /*Set the values*/
+    lv_gauge_set_value(socialenergy_gauge, 0, 100);
+
+    /* Label */
+    static lv_style_t style_label;
+    lv_style_init(&style_label);
+    lv_style_set_text_font(&style_label, LV_OBJ_PART_MAIN, &lv_font_montserrat_22);
+
+    lv_obj_t *label = lv_label_create(screen_socialenergy, NULL);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_BREAK);     /*Break the long lines*/
+    lv_label_set_recolor(label, true);                      /*Enable re-coloring by commands in the text*/
+    lv_label_set_align(label, LV_LABEL_ALIGN_CENTER);       /*Center aligned lines*/
+    lv_obj_set_width(label, NAME_LABEL_SIZE);
+    lv_obj_align(label, NULL, LV_ALIGN_CENTER, 0, 90);
+    lv_obj_add_style(label, LV_OBJ_PART_MAIN, &style_label);
+
+    lv_label_set_text(label, "Social Energy");
+
+    screens[SCREEN_SOCIALENERGY] = screen_socialenergy;
 }
 
 void ui_screen_radar_init(){
@@ -792,6 +942,10 @@ void ui_update_ip_info() {
 static void ui_init(void)
 {
     ui_screen_splash_init();
+
+    ui_screen_person_init();
+
+    ui_screen_socialenergy_init();
 
     ui_screen_event_init();
 

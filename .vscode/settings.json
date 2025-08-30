@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.html": "jinja-html",
         "*.ipp": "c",
         "*.tcc": "c",
         "istream": "c",
@@ -30,6 +31,9 @@
         "led.h": "c",
         "stdint.h": "c",
         "semphr.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "badge.h": "c",
+        "esp_netif_ip_addr.h": "c",
+        "button.h": "c"
     }
 }
