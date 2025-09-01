@@ -32,8 +32,8 @@ typedef struct
     int speed;
 } snake_t;
 
-lv_timer_t* snake_timer_handle;
-lv_obj_t *screen_snake; 
+extern lv_timer_t* snake_timer_handle;
+extern lv_obj_t *screen_snake; 
 
 lv_obj_t *ui_screen_snake_init();
     

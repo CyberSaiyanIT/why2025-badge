@@ -3,6 +3,8 @@
 const char ui_snake_eyes[][4] = {"' '", ": ", ". .", " :"};
 
 static snake_t snake;
+lv_timer_t* snake_timer_handle;
+lv_obj_t *screen_snake; 
 
 lv_obj_t *ui_screen_snake_init() {
   // page for snake

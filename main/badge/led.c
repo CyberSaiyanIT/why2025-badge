@@ -2,10 +2,10 @@
 #include "color.h"
 #include "hsv.h"
 
-static const char *TAG = "strip_ws2812";
+//static const char *TAG = "strip_ws2812";
 
-static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3}; // 0: center, 6: top
-static led_strip_t *strip;
+//static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3}; // 0: center, 6: top
+//static led_strip_t *strip;
 static bool easter_egg_active = false; // Flag to block LED flashing during easter eggs
 
 static void i2c_register_write(uint8_t addr, uint8_t reg_addr, uint8_t data)
@@ -41,7 +41,7 @@ void led_init()
     i2c_register_write(0x5a, 0x12, 0x80);
     i2c_register_write(0x5a, 0x13, 0x80);    
 
-    strip = led_strip_init(LED_RMT_TX_CHANNEL, LED_RMT_TX_GPIO, NUM_LEDS);
+    //strip = led_strip_init(LED_RMT_TX_CHANNEL, LED_RMT_TX_GPIO, NUM_LEDS);
 }
 
 void set_screen_led_backlight(uint8_t brigtness)
@@ -53,7 +53,7 @@ void set_screen_led_backlight(uint8_t brigtness)
 }
 
 static void led_rgb_color(uint8_t id, rgb_t color){
-    if (strip) {
+    /*if (strip) {
         // Write RGB values to strip driver
         ESP_ERROR_CHECK(strip->set_pixel(strip, led_order[id], color.red, color.green, color.blue));
         // Flush RGB values to LEDs
@@ -61,7 +61,7 @@ static void led_rgb_color(uint8_t id, rgb_t color){
         vTaskDelay(10 / portTICK_PERIOD_MS);
     } else {
         ESP_LOGE(TAG, "Strip not initialized");
-    }
+    }*/
 }
 
 static void led_rgb_off(uint8_t id){
@@ -77,7 +77,7 @@ static void all_on(rgb_t color){
 
 static void all_off(){
     // Clear LED strip (turn off all LEDs)
-    ESP_ERROR_CHECK(strip->clear(strip, 100));
+    //ESP_ERROR_CHECK(strip->clear(strip, 100));
     vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 

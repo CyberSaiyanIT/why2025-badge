@@ -2,6 +2,7 @@
 #include "../led.h"
 
 static uint32_t last_trigger = -1;
+lv_timer_t *backlight_timer_handle;
 
 /*
  * Update the screen backlight status

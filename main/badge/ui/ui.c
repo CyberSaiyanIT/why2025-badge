@@ -1,6 +1,10 @@
 #include "ui.h"
 #include "../led.h"
 
+lv_obj_t *screens[NUM_SCREENS];
+int8_t current_screen;
+
+
 void restore_current_timer() {
   if (current_screen == SCREEN_RSSI)
     lv_timer_resume(rssi_timer_handle);

@@ -3,6 +3,9 @@
 static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
 
+lv_timer_t *radar_timer_handle;
+lv_obj_t *screen_radar;
+
 static void ui_radar_timer(lv_timer_t *arg) {
 
   if (lv_scr_act() != screen_radar) {
@@ -93,5 +96,5 @@ lv_obj_t *ui_screen_radar_init() {
   radar_timer_handle = lv_timer_create(ui_radar_timer, 2000, NULL);
   lv_timer_pause(radar_timer_handle);
 
-  return(screen_radar);
+  return (screen_radar);
 }

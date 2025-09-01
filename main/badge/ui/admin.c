@@ -132,7 +132,7 @@ void ui_list_all_netifs() {
 
   // Try to iterate through all available network interfaces
   esp_netif_t *netif = NULL;
-  esp_netif_t *temp_netif = esp_netif_next(netif);
+  esp_netif_t *temp_netif = esp_netif_next_unsafe(netif);
   int count = 0;
 
   while (temp_netif != NULL) {
@@ -153,7 +153,7 @@ void ui_list_all_netifs() {
     ESP_LOGI("UI", "  Gateway: " IPSTR, IP2STR(&ip_info.gw));
     ESP_LOGI("UI", "  Netmask: " IPSTR, IP2STR(&ip_info.netmask));
 
-    temp_netif = esp_netif_next(temp_netif);
+    temp_netif = esp_netif_next_unsafe(temp_netif);
   }
 
   ESP_LOGI("UI", "Total network interfaces found: %d", count);
@@ -248,7 +248,7 @@ void ui_update_ip_info() {
       "Primary methods failed, trying to iterate through all interfaces...");
 
   esp_netif_t *netif = NULL;
-  esp_netif_t *temp_netif = esp_netif_next(netif);
+  esp_netif_t *temp_netif = esp_netif_next_unsafe(netif);
   bool ip_found = false;
 
   while (temp_netif != NULL && !ip_found) {
@@ -288,7 +288,7 @@ void ui_update_ip_info() {
       ESP_LOGI("UI", "Successfully displayed IP info from interface iteration");
     }
 
-    temp_netif = esp_netif_next(temp_netif);
+    temp_netif = esp_netif_next_unsafe(temp_netif);
   }
 
   if (!ip_found) {

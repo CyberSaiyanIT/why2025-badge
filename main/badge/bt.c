@@ -225,8 +225,8 @@ static void hci_cmd_send_ble_set_adv_param(void)
 static void hci_cmd_send_ble_set_adv_data(void)
 {
     
-    char adv_name[32];
-    snprintf(adv_name, 32, "[%u] %s", badge_obj.device_id, badge_obj.device_name);
+    char adv_name[64];
+    snprintf(adv_name, 64, "[%u] %s", badge_obj.device_id, badge_obj.device_name);
 
     ESP_LOGI(__FILE__, "DEVICE ID = %d", badge_obj.device_id);
     ESP_LOGI(__FILE__, "ADV NAME = %s", adv_name);

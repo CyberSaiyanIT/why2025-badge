@@ -36,8 +36,8 @@ enum screen_order {
   NUM_SCREENS
 };
 
-lv_obj_t *screens[NUM_SCREENS];
-int8_t current_screen;
+extern lv_obj_t *screens[NUM_SCREENS];
+extern int8_t current_screen;
 
 void scroll_up();
 void scroll_down();

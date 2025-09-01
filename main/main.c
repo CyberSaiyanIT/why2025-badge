@@ -12,18 +12,18 @@ void app_main()
     
     // start bluetooth
     bt_init();
-    xTaskCreatePinnedToCore(bt_task, "bt_task", 4096, NULL, 6, NULL, 0);
+    xTaskCreate(bt_task, "bt_task", 4096, NULL, 6, NULL);
 
     // start wifi management
     wifi_init();
-    xTaskCreatePinnedToCore(wifi_task, "wifi_task", 4096, NULL, 5, NULL, 0);
+    xTaskCreate(wifi_task, "wifi_task", 4096, NULL, 5, NULL);
 
     // start ui to core 1.
-    xTaskCreatePinnedToCore(ui_task, "ui_task", 8192, NULL, 0, NULL, 1);
+    xTaskCreate(ui_task, "ui_task", 8192, NULL, 0, NULL);
 
-    xTaskCreatePinnedToCore(led_task, "led_task", 2048, NULL, 10, NULL, 1);
+    xTaskCreate(led_task, "led_task", 2048, NULL, 10, NULL);
 
-    xTaskCreatePinnedToCore(button_task, "button_task", 4096, NULL, 1, NULL, 0);
+    xTaskCreate(button_task, "button_task", 4096, NULL, 1, NULL);
 
     // Handle HTTP webserver start/stop
     static httpd_handle_t server = NULL;

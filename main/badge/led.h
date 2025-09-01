@@ -5,7 +5,6 @@
 #include <stdio.h>
 
 #include "driver/i2c.h"
-#include "common/led_strip.h"
 #include "rgb.h"
 #include "badge.h"
 
@@ -18,7 +17,7 @@
 #define MAGENTA_SAIYAN              0xE80B60
 
 #define NUM_LEDS	                7
-#define LED_RMT_TX_CHANNEL          RMT_CHANNEL_0
+//#define LED_RMT_TX_CHANNEL          RMT_CHANNEL_0
 #define LED_RMT_TX_GPIO             GPIO_NUM_5
 // ****************************************************
 

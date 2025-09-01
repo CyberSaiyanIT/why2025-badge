@@ -23,6 +23,7 @@
 #define SCHEDULE_FILE "/data/schedule.json"
 #define TMP_SCHEDULE_FILE "/data/schedule.json.tmp"
 
+#define NAME_BUF_SIZE 32
 #define BADGE_BUF_SIZE 64
 #define BADGE_NAME_MAX_SIZE 28
 #define NAME_MAX_SIZE 64
@@ -57,13 +58,13 @@ typedef struct {
     uint8_t mac[6];
     uint16_t short_mac;
     uint8_t device_id;
-    char device_name[BADGE_BUF_SIZE];
+    char device_name[NAME_BUF_SIZE];
 
     char web_login[BADGE_BUF_SIZE];
-    char ap_ssid[BADGE_BUF_SIZE];
-    char ap_password[BADGE_BUF_SIZE];
-    char sta_ssid[BADGE_BUF_SIZE];
-    char sta_password[BADGE_BUF_SIZE];
+    char ap_ssid[NAME_BUF_SIZE];
+    char ap_password[NAME_BUF_SIZE];
+    char sta_ssid[NAME_BUF_SIZE];
+    char sta_password[NAME_BUF_SIZE];
     char sync_path[BADGE_BUF_SIZE];
 
     char person_name[NAME_MAX_SIZE];

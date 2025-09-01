@@ -92,6 +92,8 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt)
                 
             last_run = current_run; // update timer
             break;
+        case HTTP_EVENT_REDIRECT:
+          break;
     }
     return ESP_OK;
 }
