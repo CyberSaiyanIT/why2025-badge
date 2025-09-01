@@ -1,6 +1,6 @@
 #include "ui.h"
 #include "../led.h"
-
+#include "lcd.h"
 lv_obj_t *screens[NUM_SCREENS];
 int8_t current_screen;
 
@@ -83,11 +83,7 @@ void ui_task(void *arg) {
   SemaphoreHandle_t xGuiSemaphore;
   xGuiSemaphore = xSemaphoreCreateMutex();
 
-  ESP_LOGI(__FILE__, "LVGL INIT");
-  lv_init();
-
-  ESP_LOGI(__FILE__, "DRIVERS INIT");
-  lvgl_driver_init();
+  lcd_init();
 
   ESP_LOGI(__FILE__, "BUFFERS INIT");
   lv_color_t *buf1 = (lv_color_t *)heap_caps_malloc(
@@ -118,6 +114,7 @@ void ui_task(void *arg) {
   ui_init();
 
   while (1) {
+    heap_caps_check_integrity_all(true);
     /* Delay 1 tick (assumes FreeRTOS tick is 10ms */
     vTaskDelay(pdMS_TO_TICKS(10));
 

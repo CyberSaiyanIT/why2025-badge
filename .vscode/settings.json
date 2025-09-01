@@ -39,6 +39,7 @@
         "lvgl.h": "c",
         "lv_image.h": "c",
         "lv_conf_internal.h": "c",
-        "i2c.h": "c"
+        "i2c.h": "c",
+        "lvgl_helpers.h": "c"
     }
 }
