@@ -38,6 +38,7 @@
         "radar.C": "cpp",
         "lvgl.h": "c",
         "lv_image.h": "c",
-        "lv_conf_internal.h": "c"
+        "lv_conf_internal.h": "c",
+        "i2c.h": "c"
     }
 }
