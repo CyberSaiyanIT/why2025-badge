@@ -329,6 +329,7 @@ void bt_init()
 
 void bt_task(void *unused)
 {    
+    ESP_LOGI(__FILE__, "Starting BT task");
     host_rcv_data_t *rcv_data = (host_rcv_data_t *)malloc(sizeof(host_rcv_data_t));
     if (rcv_data == NULL) {
         ESP_LOGE(__FILE__, "Malloc rcv_data failed!");

@@ -1,7 +1,7 @@
 #if defined(LV_LVGL_H_INCLUDE_SIMPLE)
-#include "lvgl.h"
+#include <lvgl.h>
 #else
-#include "lvgl/lvgl.h"
+#include <lvgl.h>
 #endif
 
 
@@ -989,11 +989,9 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_IMG_RADAR
 };
 
 const lv_img_dsc_t img_radar = {
-  .header.cf = LV_IMG_CF_TRUE_COLOR,
-  .header.always_zero = 0,
-  .header.reserved = 0,
+  .header.cf = LV_COLOR_FORMAT_NATIVE,
   .header.w = 320,
   .header.h = 240,
-  .data_size = 76800 * LV_COLOR_SIZE / 8,
+  .data_size = 320 * 240 * LV_COLOR_DEPTH / 8,
   .data = img_radar_map,
 };

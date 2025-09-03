@@ -1,7 +1,7 @@
 #ifndef _RADAR_H
 #define _RADAR_H
 
-#include "lvgl.h"
+#include <lvgl.h>
 #include "../badge.h"
 
 extern lv_timer_t *radar_timer_handle;

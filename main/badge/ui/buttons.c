@@ -96,6 +96,8 @@ void ui_button_down() {
 }
 
 void button_task(void *arg) {
+  ESP_LOGI(__FILE__, "Starting button task");
+
   static button_event_t curr_ev;
   static button_event_t prev_ev[2];
   static QueueHandle_t button_events;

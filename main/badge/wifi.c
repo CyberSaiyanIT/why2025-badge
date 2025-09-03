@@ -231,6 +231,8 @@ void stop_wifi(){
 
 void wifi_task(void *arg)
 {   
+	ESP_LOGI(__FILE__, "Starting Wifi task");
+
     wifi_queue = xQueueCreate(4, sizeof(uint32_t));
     uint32_t wifi_event;
 

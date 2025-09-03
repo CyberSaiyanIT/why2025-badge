@@ -1,7 +1,7 @@
 #ifndef _PERSON_H
 #define _PERSON_H
 
-#include "lvgl.h"
+#include <lvgl.h>
 #include "../badge.h"
 
 void ui_set_person(bool secret);

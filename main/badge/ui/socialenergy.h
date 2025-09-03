@@ -1,7 +1,7 @@
 #ifndef SOCIALENERGY_H
 #define SOCIALENERGY_H
 
-#include "lvgl.h"
+#include <lvgl.h>
 
 #define NAME_LABEL_SIZE 260
 

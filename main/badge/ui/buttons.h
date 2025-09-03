@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lvgl.h"
-#include "lvgl_helpers.h"
+#include <lvgl.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"

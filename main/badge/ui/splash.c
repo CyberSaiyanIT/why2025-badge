@@ -6,8 +6,8 @@ lv_obj_t *ui_screen_splash_init() {
   lv_obj_t *screen_logo = lv_obj_create(NULL);
   lv_obj_clear_flag(screen_logo, LV_OBJ_FLAG_SCROLLABLE);
 
-  lv_obj_t *logo = lv_img_create(screen_logo);
-  lv_img_set_src(logo, &img_logo);
+  lv_obj_t *logo = lv_image_create(screen_logo);
+  lv_image_set_src(logo, &img_logo);
   lv_obj_align(logo, LV_ALIGN_CENTER, 0, 0);
 
   /*Change the logo's background color*/

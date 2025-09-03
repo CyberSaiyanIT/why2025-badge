@@ -7,7 +7,7 @@
 #endif
 
 #if defined(LV_LVGL_H_INCLUDE_SIMPLE)
-    #include "lvgl.h"
+    #include <lvgl.h>
 #else
     #include "lvgl/lvgl.h"
 #endif
@@ -1235,12 +1235,11 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_IMG_LOGO 
 #endif
 };
 
-const lv_img_dsc_t img_logo = {
-  .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
-  .header.always_zero = 0,
-  .header.reserved = 0,
+const lv_image_dsc_t img_logo = {
+  .header.cf = LV_COLOR_FORMAT_ARGB8888,
+  .header.magic = LV_IMAGE_HEADER_MAGIC,
   .header.w = 300,
   .header.h = 300,
-  .data_size = 90000 * LV_IMG_PX_SIZE_ALPHA_BYTE,
+  .data_size = 300 * 300 * LV_COLOR_DEPTH / 8,
   .data = img_logo_map,
 };

@@ -65,8 +65,7 @@ void led_init() {
       }};
 
   /// Create the LED strip object
-  ESP_ERROR_CHECK(
-      led_strip_new_rmt_device(&strip_config, &rmt_config, &strip));
+  ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &strip));
 }
 
 void set_screen_led_backlight(uint8_t brigtness) {
@@ -79,10 +78,10 @@ void set_screen_led_backlight(uint8_t brigtness) {
 static void led_rgb_color(uint8_t id, rgb_t color) {
   if (strip) {
     // Write RGB values to strip driver
-    ESP_ERROR_CHECK(led_strip_set_pixel(strip, led_order[id], color.red, color.green,
-                        color.blue));
+    ESP_ERROR_CHECK(led_strip_set_pixel(strip, led_order[id], color.red,
+                                        color.green, color.blue));
     ESP_ERROR_CHECK(led_strip_refresh(strip));
-    //ESP_ERROR_CHECK(strip->set_pixel(strip, led_order[id], color.red,
+    // ESP_ERROR_CHECK(strip->set_pixel(strip, led_order[id], color.red,
     //                                color.green, color.blue));
     // Flush RGB values to LEDs
     // ESP_ERROR_CHECK(strip->refresh(strip, 100));
@@ -255,6 +254,8 @@ void set_easter_egg_active(bool active) {
 }
 
 void led_task(void *arg) {
+  ESP_LOGI(__FILE__, "Starting Led task");
+
   while (1) {
     ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 

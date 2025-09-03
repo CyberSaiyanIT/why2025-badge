@@ -59,7 +59,6 @@ lv_obj_t *ui_screen_person_init() {
   lv_obj_add_style(person_job, &style_organization_job, LV_PART_MAIN);
   /* Stetting texts */
   ui_set_person(false);
-
   return (screen_person);
 }
 

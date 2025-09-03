@@ -8,7 +8,7 @@
 #include "esp_netif.h"
 #include "esp_netif_ip_addr.h"
 #include "freertos/FreeRTOS.h"
-#include "lvgl.h"
+#include <lvgl.h>
 
 #define ADMIN_STATE_OFF 0
 #define ADMIN_STATE_AP 1

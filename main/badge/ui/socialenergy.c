@@ -7,52 +7,12 @@ lv_obj_t *ui_screen_socialenergy_init() {
   lv_obj_t *screen_socialenergy = lv_obj_create(NULL);
   lv_obj_clear_flag(screen_socialenergy, LV_OBJ_FLAG_SCROLLABLE);
 
-  socialenergy_meter = lv_meter_create(screen_socialenergy);
+  socialenergy_meter = lv_scale_create(screen_socialenergy);
   lv_obj_set_align(socialenergy_meter, LV_ALIGN_TOP_MID);
   lv_obj_set_pos(socialenergy_meter, 0, 10);
   lv_obj_set_size(socialenergy_meter, 180, 180);
 
-  /*Add a scale first*/
-  lv_meter_scale_t *scale = lv_meter_add_scale(socialenergy_meter);
-  lv_meter_set_scale_ticks(socialenergy_meter, scale, 41, 2, 10,
-                           lv_palette_main(LV_PALETTE_GREY));
-  lv_meter_set_scale_major_ticks(socialenergy_meter, scale, 8, 4, 15,
-                                 lv_color_black(), 10);
-
-  lv_meter_indicator_t *indic;
-
-  /*Add a red arc to the start*/
-  indic = lv_meter_add_arc(socialenergy_meter, scale, 3,
-                           lv_palette_main(LV_PALETTE_RED), 0);
-  lv_meter_set_indicator_start_value(socialenergy_meter, indic, 0);
-  lv_meter_set_indicator_end_value(socialenergy_meter, indic, 20);
-
-  /*Make the tick lines blue at the start of the scale*/
-  indic = lv_meter_add_scale_lines(socialenergy_meter, scale,
-                                   lv_palette_main(LV_PALETTE_RED),
-                                   lv_palette_main(LV_PALETTE_RED), false, 0);
-  lv_meter_set_indicator_start_value(socialenergy_meter, indic, 0);
-  lv_meter_set_indicator_end_value(socialenergy_meter, indic, 20);
-
-  /*Add a green arc to the end*/
-  indic = lv_meter_add_arc(socialenergy_meter, scale, 3,
-                           lv_palette_main(LV_PALETTE_GREEN), 0);
-  lv_meter_set_indicator_start_value(socialenergy_meter, indic, 80);
-  lv_meter_set_indicator_end_value(socialenergy_meter, indic, 100);
-
-  /*Make the tick lines red at the end of the scale*/
-  indic = lv_meter_add_scale_lines(socialenergy_meter, scale,
-                                   lv_palette_main(LV_PALETTE_GREEN),
-                                   lv_palette_main(LV_PALETTE_GREEN), false, 0);
-  lv_meter_set_indicator_start_value(socialenergy_meter, indic, 80);
-  lv_meter_set_indicator_end_value(socialenergy_meter, indic, 100);
-
-  /*Add a needle line indicator*/
-  indic = lv_meter_add_needle_line(socialenergy_meter, scale, 4,
-                                   lv_palette_main(LV_PALETTE_GREY), -10);
-
-  /*Set the values*/
-  lv_meter_set_indicator_value(socialenergy_meter, indic, 100);
+  // TODO  
 
   /* Label */
   static lv_style_t style_label;

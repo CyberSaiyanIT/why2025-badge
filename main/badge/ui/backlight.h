@@ -1,7 +1,7 @@
 #ifndef _BACKLIGHT_H
 #define _BACKLIGHT_H
 
-#include "lvgl.h"
+#include <lvgl.h>
 
 // Brightness constants - now configured via default.json
 // Legacy values: SCREEN_BRIGHT_MAX=96, SCREEN_BRIGHT_MID=32,

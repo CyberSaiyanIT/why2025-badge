@@ -1,7 +1,7 @@
 #ifndef _RSSI_H
 #define _RSSI_H
 
-#include "lvgl.h"
+#include <lvgl.h>
 #include "../badge.h"
 
 extern lv_timer_t *rssi_timer_handle;

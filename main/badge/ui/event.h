@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "lvgl.h"
+#include <lvgl.h>
 #include "../badge.h"
 
 void ui_event_load();
