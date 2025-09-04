@@ -44,6 +44,7 @@
         "freertos.h": "c",
         "esp_lcd_panel_vendor.h": "c",
         "esp_lcd_panel_io.h": "c",
-        "lv_types.h": "c"
+        "lv_types.h": "c",
+        "atomic.h": "c"
     }
 }

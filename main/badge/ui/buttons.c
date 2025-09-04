@@ -1,28 +1,28 @@
 #include "buttons.h"
 
-const int nb_screens = NUM_SCREENS + 1;
-static uint8_t up_button_press_counter = 0;
+const int nb_screens                     = NUM_SCREENS + 1;
+static uint8_t up_button_press_counter   = 0;
 static uint8_t down_button_press_counter = 0;
 
-static int8_t counter_screen = -1; // Initialize to invalid screen index
+static int8_t counter_screen = -1;  // Initialize to invalid screen index
 
 static screen_buttons_t button_action[NUM_SCREENS] = {
-    {NULL, NULL, NULL, NULL},                           // LOGO
-    {NULL, person_button_up, person_button_down, NULL}, // PERSON
+    {NULL, NULL, NULL, NULL},                            // LOGO
+    {NULL, person_button_up, person_button_down, NULL},  // PERSON
     {NULL, socialenergy_button_up, socialenergy_button_down,
-     NULL},                                           // SOCIALENERGY
-    {NULL, scroll_up, scroll_down, NULL},             // EVENT
-    {NULL, NULL, NULL, NULL},                         // RADAR
-    {NULL, scroll_up, scroll_down, NULL},             // RSSI
-    {NULL, admin_button_up, admin_button_down, NULL}, // ADMIN
-    {NULL, snake_button_up, snake_button_down, NULL}, // SNAKE
+     NULL},                                            // SOCIALENERGY
+    {NULL, scroll_up, scroll_down, NULL},              // EVENT
+    {NULL, NULL, NULL, NULL},                          // RADAR
+    {NULL, scroll_up, scroll_down, NULL},              // RSSI
+    {NULL, admin_button_up, admin_button_down, NULL},  // ADMIN
+    {NULL, snake_button_up, snake_button_down, NULL},  // SNAKE
 };
 
 void check_counter() {
   // Check if this is the first button press or if we've changed screens
   if (counter_screen != current_screen) {
     // Reset counters when screen changes
-    up_button_press_counter = 0;
+    up_button_press_counter   = 0;
     down_button_press_counter = 0;
     // Update counter_screen to current screen
     counter_screen = current_screen;
@@ -54,6 +54,7 @@ void ui_button_up() {
   if (ui_update_backlight(true))
     return;
 
+  lv_lock();
   if (button_action[current_screen].before != NULL)
     button_action[current_screen].before();
   if (button_action[current_screen].button_up != NULL)
@@ -62,6 +63,7 @@ void ui_button_up() {
     ESP_LOGI(__FILE__, "Button up, no actions");
   if (button_action[current_screen].before != NULL)
     button_action[current_screen].after();
+  lv_unlock();
 }
 
 void ui_button_down() {
@@ -85,6 +87,7 @@ void ui_button_down() {
 
   if (ui_update_backlight(true))
     return;
+  lv_lock();
   if (button_action[current_screen].before != NULL)
     button_action[current_screen].before();
   if (button_action[current_screen].button_down != NULL)
@@ -93,6 +96,7 @@ void ui_button_down() {
     ESP_LOGI(__FILE__, "Button down, no actions");
   if (button_action[current_screen].before != NULL)
     button_action[current_screen].after();
+  lv_unlock();
 }
 
 void button_task(void *arg) {
@@ -109,7 +113,7 @@ void button_task(void *arg) {
       if (curr_ev.event == BUTTON_HELD) {
         set_screen_led_backlight(badge_obj.brightness_mid);
       }
-      if (curr_ev.pin == BUTTON_1) // DOWN button event
+      if (curr_ev.pin == BUTTON_1)  // DOWN button event
       {
         if ((prev_ev[btn_id].event == BUTTON_HELD) &&
             (curr_ev.event == BUTTON_UP)) {
@@ -120,7 +124,7 @@ void button_task(void *arg) {
         }
       }
 
-      if (curr_ev.pin == BUTTON_2) // UP button event
+      if (curr_ev.pin == BUTTON_2)  // UP button event
       {
         if ((prev_ev[btn_id].event == BUTTON_HELD) &&
             (curr_ev.event == BUTTON_UP)) {
