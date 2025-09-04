@@ -12,9 +12,8 @@
 #define BRIGHT_MID_TIMEOUT_MS 5000
 #define BRIGHT_OFF_TIMEOUT_MS 15000
 
-
 extern lv_timer_t *backlight_timer_handle;
-
+void set_screen_led_backlight(uint8_t brigtness);
 bool ui_update_backlight(bool trigger);
 void backlight_init();
 #endif

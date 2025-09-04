@@ -1,38 +1,16 @@
 #include "led.h"
 #include "color.h"
 #include "hsv.h"
+#include "common/i2c.h"
 
-static const char *TAG = "strip_ws2812";
 
-static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3}; // 0: center, 6: top
+static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3};  // 0: center, 6: top
 static led_strip_handle_t strip;
 static bool easter_egg_active =
-    false; // Flag to block LED flashing during easter eggs
+    false;  // Flag to block LED flashing during easter eggs
 
-static void i2c_register_write(uint8_t addr, uint8_t reg_addr, uint8_t data) {
-  uint8_t write_buf[2] = {reg_addr, data};
-  i2c_master_write_to_device(0, addr, write_buf, sizeof(write_buf),
-                             I2C_MASTER_TIMEOUT_MS / portTICK_PERIOD_MS);
-}
-
-static void i2c_master_init() {
-  int i2c_master_port = I2C_MASTER_NUM;
-
-  i2c_config_t conf = {
-      .mode = I2C_MODE_MASTER,
-      .sda_io_num = I2C_MASTER_SDA_IO,
-      .scl_io_num = I2C_MASTER_SCL_IO,
-      .sda_pullup_en = GPIO_PULLUP_ENABLE,
-      .scl_pullup_en = GPIO_PULLUP_ENABLE,
-      .master.clk_speed = I2C_MASTER_FREQ_HZ,
-  };
-
-  i2c_param_config(i2c_master_port, &conf);
-  i2c_driver_install(i2c_master_port, conf.mode, 0, 0, 0);
-}
 
 void led_init() {
-  i2c_master_init();
   // setup aw9523b led drivers.
   // chip 1, address = 0x5a; chip 2, address = 0x5b.
   i2c_register_write(0x5a, 0x11, 0x01);
@@ -40,39 +18,32 @@ void led_init() {
   i2c_register_write(0x5a, 0x13, 0x80);
 
   led_strip_config_t strip_config = {
-      .strip_gpio_num = LED_RMT_TX_GPIO, // The GPIO that connected to the LED
-                                         // strip's data line
-      .max_leds = NUM_LEDS,              // The number of LEDs in the strip,
+      .strip_gpio_num = LED_RMT_TX_GPIO,  // The GPIO that connected to the LED
+                                          // strip's data line
+      .max_leds = NUM_LEDS,               // The number of LEDs in the strip,
       .led_model =
-          LED_MODEL_WS2812, // LED strip model, it determines the bit timing
+          LED_MODEL_WS2812,  // LED strip model, it determines the bit timing
       .color_component_format =
-          LED_STRIP_COLOR_COMPONENT_FMT_GRB, // The color component format is
-                                             // G-R-B
+          LED_STRIP_COLOR_COMPONENT_FMT_GRB,  // The color component format is
+                                              // G-R-B
       .flags = {
-          .invert_out = false, // don't invert the output signal
+          .invert_out = false,  // don't invert the output signal
       }};
 
   /// RMT backend specific configuration
   led_strip_rmt_config_t rmt_config = {
-      .clk_src = RMT_CLK_SRC_DEFAULT,    // different clock source can lead to
-                                         // different power consumption
-      .resolution_hz = 10 * 1000 * 1000, // RMT counter clock frequency: 10MHz
+      .clk_src = RMT_CLK_SRC_DEFAULT,     // different clock source can lead to
+                                          // different power consumption
+      .resolution_hz = 10 * 1000 * 1000,  // RMT counter clock frequency: 10MHz
       .mem_block_symbols =
-          64, // the memory size of each RMT channel, in words (4 bytes)
+          64,  // the memory size of each RMT channel, in words (4 bytes)
       .flags = {
           .with_dma =
-              false, // DMA feature is available on chips like ESP32-S3/P4
+              false,  // DMA feature is available on chips like ESP32-S3/P4
       }};
 
   /// Create the LED strip object
   ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &strip));
-}
-
-void set_screen_led_backlight(uint8_t brigtness) {
-  i2c_register_write(0x5a, 0x20, brigtness);
-  i2c_register_write(0x5a, 0x21, brigtness);
-  i2c_register_write(0x5a, 0x22, brigtness);
-  i2c_register_write(0x5a, 0x23, brigtness);
 }
 
 static void led_rgb_color(uint8_t id, rgb_t color) {
@@ -87,7 +58,7 @@ static void led_rgb_color(uint8_t id, rgb_t color) {
     // ESP_ERROR_CHECK(strip->refresh(strip, 100));
     vTaskDelay(10 / portTICK_PERIOD_MS);
   } else {
-    ESP_LOGE(TAG, "Strip not initialized");
+    ESP_LOGE(__FILE__, "Strip not initialized");
   }
 }
 
@@ -114,60 +85,60 @@ static void set_leds_by_badge_id(rgb_t color) {
   ESP_LOGI(__FILE__, "set_leds_by_badge_id: device_id = %d",
            badge_obj.device_id);
   switch (badge_obj.device_id) {
-  case 1:
-    led_rgb_color(0, color);
-    break;
-  case 2:
-    if (round) {
+    case 1:
+      led_rgb_color(0, color);
+      break;
+    case 2:
+      if (round) {
+        led_rgb_color(1, color);
+        led_rgb_color(3, color);
+      } else {
+        led_rgb_color(2, color);
+        led_rgb_color(5, color);
+      }
+      break;
+    case 3:
+      if (round) {
+        led_rgb_color(2, color);
+        led_rgb_color(3, color);
+        led_rgb_color(6, color);
+      } else {
+        led_rgb_color(4, color);
+        led_rgb_color(5, color);
+        led_rgb_color(1, color);
+      }
+      break;
+    case 4:
       led_rgb_color(1, color);
-      led_rgb_color(3, color);
-    } else {
       led_rgb_color(2, color);
+      led_rgb_color(3, color);
       led_rgb_color(5, color);
-    }
-    break;
-  case 3:
-    if (round) {
+      break;
+    case 5:
+      led_rgb_color(0, color);
+      led_rgb_color(1, color);
       led_rgb_color(2, color);
       led_rgb_color(3, color);
-      led_rgb_color(6, color);
-    } else {
+      led_rgb_color(5, color);
+      break;
+    case 6:
+      led_rgb_color(1, color);
+      led_rgb_color(2, color);
+      led_rgb_color(3, color);
       led_rgb_color(4, color);
       led_rgb_color(5, color);
-      led_rgb_color(1, color);
-    }
-    break;
-  case 4:
-    led_rgb_color(1, color);
-    led_rgb_color(2, color);
-    led_rgb_color(3, color);
-    led_rgb_color(5, color);
-    break;
-  case 5:
-    led_rgb_color(0, color);
-    led_rgb_color(1, color);
-    led_rgb_color(2, color);
-    led_rgb_color(3, color);
-    led_rgb_color(5, color);
-    break;
-  case 6:
-    led_rgb_color(1, color);
-    led_rgb_color(2, color);
-    led_rgb_color(3, color);
-    led_rgb_color(4, color);
-    led_rgb_color(5, color);
-    led_rgb_color(6, color);
-    break;
-  case 7:
-    all_on(color);
-    break;
+      led_rgb_color(6, color);
+      break;
+    case 7:
+      all_on(color);
+      break;
   }
   round = !round;
 }
 
 void flash(int period, uint8_t fade_factor) {
   rgb_t color = rgb_from_code(MAGENTA_SAIYAN);
-  color = rgb_fade(color, fade_factor);
+  color       = rgb_fade(color, fade_factor);
   ESP_LOGI(__FILE__, "Start flashing");
   set_leds_by_badge_id(color);
   vTaskDelay(300 / portTICK_PERIOD_MS);
@@ -177,10 +148,10 @@ void flash(int period, uint8_t fade_factor) {
 }
 
 void set_completed() {
-  set_easter_egg_active(true); // Block LED flashing
+  set_easter_egg_active(true);  // Block LED flashing
 
   rgb_t color = rgb_from_code(MAGENTA_SAIYAN);
-  color = rgb_fade(color, 0xf0);
+  color       = rgb_fade(color, 0xf0);
   for (int i = 1; i < 7; i++) {
     led_rgb_color(i, color);
     vTaskDelay(200 / portTICK_PERIOD_MS);
@@ -194,21 +165,21 @@ void set_completed() {
     vTaskDelay(200 / portTICK_PERIOD_MS);
   }
 
-  set_easter_egg_active(false); // Re-enable LED flashing
+  set_easter_egg_active(false);  // Re-enable LED flashing
 }
 
 void rainbow() {
-  set_easter_egg_active(true); // Block LED flashing
+  set_easter_egg_active(true);  // Block LED flashing
 
   // Define rainbow colors using HSV for better color representation
   uint8_t rainbow_hues[7] = {
-      HUE_RED,    // LED 0 (center) - Red
-      HUE_ORANGE, // LED 1 - Orange
-      HUE_YELLOW, // LED 2 - Yellow
-      HUE_GREEN,  // LED 3 - Green
-      HUE_AQUA,   // LED 4 - Aqua/Cyan
-      HUE_BLUE,   // LED 5 - Blue
-      HUE_PURPLE  // LED 6 (top) - Purple
+      HUE_RED,     // LED 0 (center) - Red
+      HUE_ORANGE,  // LED 1 - Orange
+      HUE_YELLOW,  // LED 2 - Yellow
+      HUE_GREEN,   // LED 3 - Green
+      HUE_AQUA,    // LED 4 - Aqua/Cyan
+      HUE_BLUE,    // LED 5 - Blue
+      HUE_PURPLE   // LED 6 (top) - Purple
   };
 
   ESP_LOGI(__FILE__, "Starting rainbow sequence");
@@ -217,9 +188,9 @@ void rainbow() {
   for (int i = 0; i < 7; i++) {
     // Create HSV color with full saturation and brightness
     hsv_t hsv_color = {
-        .hue = rainbow_hues[i],
+        .hue        = rainbow_hues[i],
         .saturation = 255,
-        .value = 200 // Slightly dimmed for better visibility
+        .value      = 200  // Slightly dimmed for better visibility
     };
 
     // Convert HSV to RGB
@@ -245,7 +216,7 @@ void rainbow() {
 
   ESP_LOGI(__FILE__, "Rainbow sequence completed");
 
-  set_easter_egg_active(false); // Re-enable LED flashing
+  set_easter_egg_active(false);  // Re-enable LED flashing
 }
 
 void set_easter_egg_active(bool active) {
@@ -263,7 +234,7 @@ void led_task(void *arg) {
     if (easter_egg_active) {
       ESP_LOGI(__FILE__, "Easter egg active, skipping normal LED operations");
       vTaskDelay(1000 /
-                 portTICK_PERIOD_MS); // Wait 1 second before checking again
+                 portTICK_PERIOD_MS);  // Wait 1 second before checking again
       continue;
     }
 

@@ -24,7 +24,7 @@ typedef struct {
   void (*after)();
 } screen_buttons_t;
 
-void button_task(void *arg);
+void buttons_init();
 
 void ui_button_up();
 void ui_button_down();

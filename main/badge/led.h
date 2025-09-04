@@ -4,16 +4,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "driver/i2c.h"
 #include "led_strip.h"
 #include "rgb.h"
 #include "badge.h"
 
-#define I2C_MASTER_SCL_IO           0
-#define I2C_MASTER_SDA_IO           1
-#define I2C_MASTER_NUM              0
-#define I2C_MASTER_FREQ_HZ          400000
-#define I2C_MASTER_TIMEOUT_MS       1000
 
 #define MAGENTA_SAIYAN              0xE80B60
 

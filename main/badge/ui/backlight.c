@@ -1,6 +1,6 @@
 #include "backlight.h"
 #include "../led.h"
-
+#include "../common/i2c.h"
 static uint32_t last_trigger = -1;
 lv_timer_t *backlight_timer_handle;
 
@@ -11,6 +11,13 @@ lv_timer_t *backlight_timer_handle;
 
 void restore_current_timer();
 void pause_current_timer();
+
+void set_screen_led_backlight(uint8_t brigtness) {
+  i2c_register_write(0x5a, 0x20, brigtness);
+  i2c_register_write(0x5a, 0x21, brigtness);
+  i2c_register_write(0x5a, 0x22, brigtness);
+  i2c_register_write(0x5a, 0x23, brigtness);
+}
 
 bool ui_update_backlight(bool trigger) {
   uint32_t span = lv_tick_get() - last_trigger;
