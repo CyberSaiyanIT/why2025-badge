@@ -1,13 +1,12 @@
 #include "radar.h"
-
-static lv_obj_t *radar_node[MAX_NEARBY_NODE] = {0};
+#include "lcd.h"
+static lv_obj_t *radar_node[MAX_NEARBY_NODE]        = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
 
 lv_timer_t *radar_timer_handle;
 lv_obj_t *screen_radar;
 
 static void ui_radar_timer(lv_timer_t *arg) {
-
   if (lv_scr_act() != screen_radar) {
     lv_timer_pause(radar_timer_handle);
     return;
@@ -79,11 +78,11 @@ lv_obj_t *ui_screen_radar_init() {
   lv_obj_align(img, LV_ALIGN_TOP_LEFT, 0, 0);
 
   for (int i = 0; i < sizeof(radar_node) / sizeof(lv_obj_t *); i++) {
-    radar_node[i] = lv_btn_create(img);
+    radar_node[i] = lv_button_create(screen_radar);
     lv_obj_set_size(radar_node[i], 20, 20);
     lv_obj_get_state(radar_node[i]);
     lv_state_t button_state =
-        lv_obj_get_state(radar_node[i]); // set to solid color.
+        lv_obj_get_state(radar_node[i]);  // set to solid color.
     if (button_state == LV_STATE_PRESSED)
       lv_obj_clear_state(radar_node[i], LV_STATE_PRESSED);
     else

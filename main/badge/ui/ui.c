@@ -71,7 +71,7 @@ void ui_switch_page_up() {
 }
 
 static void ui_init(void) {
-  current_screen = SCREEN_PERSON;
+  current_screen = SCREEN_RADAR;
 
   screens[SCREEN_LOGO]         = ui_screen_splash_init();
   screens[SCREEN_PERSON]       = ui_screen_person_init();

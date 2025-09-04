@@ -20,7 +20,8 @@ uint8_t *buf1 = NULL;
 uint8_t *buf2 = NULL;
 /***** LCD INIT *****/
 
-/***** LV LOG *****/
+
+#if LV_USE_LOG
 void log_to_serial(lv_log_level_t level, const char *buf) {
   switch (level) {
     case LV_LOG_LEVEL_TRACE:
@@ -43,6 +44,7 @@ void log_to_serial(lv_log_level_t level, const char *buf) {
       break;
   }
 }
+#endif
 
 static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io,
                                     esp_lcd_panel_io_event_data_t *edata,
@@ -58,9 +60,7 @@ static void lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
   int offsetx2 = area->x2;
   int offsety1 = area->y1;
   int offsety2 = area->y2;
-
-  ESP_LOGI(__FILE__, "LVGL_FLUSH %d %d - %d %d", offsetx1, offsety1, offsetx2, offsety2);
-
+  
   // because SPI LCD is big-endian, we need to swap the RGB bytes order
   lv_draw_sw_rgb565_swap(px_map,
                          (offsetx2 + 1 - offsetx1) * (offsety2 + 1 - offsety1));
@@ -123,8 +123,9 @@ void lcd_init() {
 
   ESP_LOGI(__FILE__, "LVGL Initialization");
   lv_init();
+#if LV_USE_LOG
   lv_log_register_print_cb(log_to_serial);
-
+#endif
   // create a lvgl display
   ESP_LOGI(__FILE__, "Display Initialization");
   lv_display_t *display = lv_display_create(LCD_H_RES, LCD_V_RES);

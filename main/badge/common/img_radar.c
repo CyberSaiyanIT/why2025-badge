@@ -989,7 +989,7 @@ const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST LV_ATTRIBUTE_IMG_IMG_RADAR
 };
 
 const lv_img_dsc_t img_radar = {
-  .header.cf = LV_COLOR_FORMAT_NATIVE,
+  .header.cf = LV_COLOR_FORMAT_NATIVE_WITH_ALPHA,
   .header.w = 320,
   .header.h = 240,
   .data_size = 320 * 240 * LV_COLOR_DEPTH / 8,

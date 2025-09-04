@@ -16,8 +16,8 @@ void app_main()
     xTaskCreate(bt_task, "bt_task", 4096, NULL, 6, NULL);
 
     // start wifi management
-    //wifi_init();
-    //xTaskCreate(wifi_task, "wifi_task", 4096, NULL, 5, NULL);
+    wifi_init();
+    xTaskCreate(wifi_task, "wifi_task", 4096, NULL, 5, NULL);
 
     // start ui to core 1.
     xTaskCreate(ui_task, "ui_task", 8192, NULL, 0, NULL);
