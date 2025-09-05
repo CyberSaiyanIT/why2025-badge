@@ -13,9 +13,9 @@ static bool easter_egg_active =
 void led_init() {
   // setup aw9523b led drivers.
   // chip 1, address = 0x5a; chip 2, address = 0x5b.
-  i2c_register_write(0x5a, 0x11, 0x01);
-  i2c_register_write(0x5a, 0x12, 0x80);
-  i2c_register_write(0x5a, 0x13, 0x80);
+  i2c_register_write(AW9523B_handle, 0x11, 0x01);
+  i2c_register_write(AW9523B_handle, 0x12, 0x80);
+  i2c_register_write(AW9523B_handle, 0x13, 0x80);
 
   led_strip_config_t strip_config = {
       .strip_gpio_num = LED_RMT_TX_GPIO,  // The GPIO that connected to the LED

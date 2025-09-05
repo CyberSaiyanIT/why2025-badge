@@ -13,10 +13,10 @@ void restore_current_timer();
 void pause_current_timer();
 
 void set_screen_led_backlight(uint8_t brigtness) {
-  i2c_register_write(0x5a, 0x20, brigtness);
-  i2c_register_write(0x5a, 0x21, brigtness);
-  i2c_register_write(0x5a, 0x22, brigtness);
-  i2c_register_write(0x5a, 0x23, brigtness);
+  i2c_register_write(AW9523B_handle, 0x20, brigtness);
+  i2c_register_write(AW9523B_handle, 0x21, brigtness);
+  i2c_register_write(AW9523B_handle, 0x22, brigtness);
+  i2c_register_write(AW9523B_handle, 0x23, brigtness);
 }
 
 bool ui_update_backlight(bool trigger) {

@@ -1,10 +1,12 @@
 #include "snake.h"
+#include "esp_log.h"
+
 
 const char ui_snake_eyes[][4] = {"' '", ": ", ". .", " :"};
 
 static snake_t snake;
-lv_timer_t* snake_timer_handle;
-lv_obj_t *screen_snake; 
+lv_timer_t *snake_timer_handle;
+lv_obj_t *screen_snake;
 
 lv_obj_t *ui_screen_snake_init() {
   // page for snake
@@ -31,7 +33,7 @@ static void snake_add_body(lv_obj_t *parent) {
   if (snake.size >= UI_SNAKE_MAX_BODY)
     return;
 
-  int index = snake.size++;
+  int index         = snake.size++;
   snake.body[index] = lv_btn_create(parent);
   // TODO togggle
   // lv_btn_toggle(snake.body[index]);
@@ -54,7 +56,7 @@ void snake_reset(lv_obj_t *parent) {
     snake.food = NULL;
   }
 
-  snake_add_body(parent); // head
+  snake_add_body(parent);  // head
   snake.eye = lv_label_create(snake.body[0]);
   snake_set_dir(SNAKE_DIR_RIGHT);
   lv_obj_set_pos(snake.body[0], UI_SNAKE_BODY_SIZE * 3, UI_SNAKE_BODY_SIZE * 6);
@@ -84,22 +86,22 @@ void snake_timer(lv_timer_t *arg) {
   counter = 0;
 
   lv_obj_t *parent = screen_snake;
-  lv_coord_t x = lv_obj_get_x(snake.body[0]);
-  lv_coord_t y = lv_obj_get_y(snake.body[0]);
+  lv_coord_t x     = lv_obj_get_x(snake.body[0]);
+  lv_coord_t y     = lv_obj_get_y(snake.body[0]);
 
   switch (snake.dir) {
-  case SNAKE_DIR_UP:
-    y -= UI_SNAKE_BODY_SIZE;
-    break;
-  case SNAKE_DIR_DOWN:
-    y += UI_SNAKE_BODY_SIZE;
-    break;
-  case SNAKE_DIR_LEFT:
-    x -= UI_SNAKE_BODY_SIZE;
-    break;
-  case SNAKE_DIR_RIGHT:
-    x += UI_SNAKE_BODY_SIZE;
-    break;
+    case SNAKE_DIR_UP:
+      y -= UI_SNAKE_BODY_SIZE;
+      break;
+    case SNAKE_DIR_DOWN:
+      y += UI_SNAKE_BODY_SIZE;
+      break;
+    case SNAKE_DIR_LEFT:
+      x -= UI_SNAKE_BODY_SIZE;
+      break;
+    case SNAKE_DIR_RIGHT:
+      x += UI_SNAKE_BODY_SIZE;
+      break;
   }
 
   // check if head hit any wall.
@@ -143,7 +145,7 @@ void snake_timer(lv_timer_t *arg) {
     lv_coord_t cy = lv_obj_get_y(snake.body[i - 1]);
     lv_obj_set_pos(snake.body[i], cx, cy);
   }
-  lv_obj_set_pos(snake.body[0], x, y); // head is last one.
+  lv_obj_set_pos(snake.body[0], x, y);  // head is last one.
 }
 
 void snake_button_up() {

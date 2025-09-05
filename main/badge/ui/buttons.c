@@ -1,25 +1,30 @@
 #include "buttons.h"
 
+
+#include "backlight.h"
+#include "person.h"
+#include "socialenergy.h"
+#include "admin.h"
+#include "snake.h"
+
+
 const int nb_screens                     = NUM_SCREENS;
 static uint8_t up_button_press_counter   = 0;
 static uint8_t down_button_press_counter = 0;
 
 static int8_t counter_screen = -1;  // Initialize to invalid screen index
-static button_event_t curr_ev;
-static button_event_t prev_ev[2];
 static QueueHandle_t button_events;
 lv_timer_t *buttons_timer_handle;
 
 static screen_buttons_t button_action[NUM_SCREENS] = {
-    {NULL, NULL, NULL, NULL},                            // LOGO
-    {NULL, person_button_up, person_button_down, NULL},  // PERSON
-    {NULL, socialenergy_button_up, socialenergy_button_down,
-     NULL},                                            // SOCIALENERGY
-    {NULL, scroll_up, scroll_down, NULL},              // EVENT
-    {NULL, NULL, NULL, NULL},                          // RADAR
-    {NULL, scroll_up, scroll_down, NULL},              // RSSI
-    {NULL, admin_button_up, admin_button_down, NULL},  // ADMIN
-    {NULL, snake_button_up, snake_button_down, NULL},  // SNAKE
+    {NULL, NULL},                                        // LOGO
+    {person_button_up, person_button_down},              // PERSON
+    {socialenergy_button_up, socialenergy_button_down},  // SOCIALENERGY
+    {scroll_up, scroll_down},                            // EVENT
+    {NULL, NULL},                                        // RADAR
+    {scroll_up, scroll_down},                            // RSSI
+    {admin_button_up, admin_button_down},                // ADMIN
+    {snake_button_up, snake_button_down},                // SNAKE
 };
 
 void check_counter() {
@@ -30,8 +35,6 @@ void check_counter() {
     down_button_press_counter = 0;
     // Update counter_screen to current screen
     counter_screen = current_screen;
-    // printf("DEBUG: Started counting UP presses on screen index: %d\n",
-    // current_screen);
   }
 }
 
@@ -58,14 +61,10 @@ void ui_button_up() {
   if (ui_update_backlight(true))
     return;
 
-  if (button_action[current_screen].before != NULL)
-    button_action[current_screen].before();
   if (button_action[current_screen].button_up != NULL)
     button_action[current_screen].button_up();
   else
     ESP_LOGI(__FILE__, "Button up, no actions");
-  if (button_action[current_screen].before != NULL)
-    button_action[current_screen].after();
 }
 
 void ui_button_down() {
@@ -89,17 +88,16 @@ void ui_button_down() {
 
   if (ui_update_backlight(true))
     return;
-  if (button_action[current_screen].before != NULL)
-    button_action[current_screen].before();
   if (button_action[current_screen].button_down != NULL)
     button_action[current_screen].button_down();
   else
     ESP_LOGI(__FILE__, "Button down, no actions");
-  if (button_action[current_screen].before != NULL)
-    button_action[current_screen].after();
 }
 
 static void buttons_timer(lv_timer_t *arg) {
+  static button_event_t curr_ev;
+  static button_event_t prev_ev[2];
+
   if (xQueueReceive(button_events, &curr_ev, 0)) {
     uint8_t btn_id = curr_ev.pin - 0x08;
     if (curr_ev.event == BUTTON_HELD) {

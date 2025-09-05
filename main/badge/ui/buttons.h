@@ -18,10 +18,8 @@
 #define BUTTON_2 0x09 // UP button
 
 typedef struct {
-  void (*before)();
   void (*button_up)();
   void (*button_down)();
-  void (*after)();
 } screen_buttons_t;
 
 void buttons_init();

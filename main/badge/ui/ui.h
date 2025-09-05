@@ -6,24 +6,6 @@
 
 #include <lvgl.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-#include "freertos/task.h"
-
-#include "../badge.h"
-#include "admin.h"
-#include "event.h"
-#include "person.h"
-#include "radar.h"
-#include "rssi.h"
-#include "snake.h"
-#include "socialenergy.h"
-#include "splash.h"
-
-#include "backlight.h"
-#include "buttons.h"
-
-
 enum screen_order {
   SCREEN_LOGO,
   SCREEN_PERSON,
@@ -36,6 +18,7 @@ enum screen_order {
   NUM_SCREENS
 };
 
+#define NAME_LABEL_SIZE 250
 #define SCROLL_UP 80
 #define SCROLL_DOWN -80
 
@@ -50,6 +33,4 @@ void ui_switch_page_up();
 void ui_switch_page_down();
 void ui_task(void *);
 
-// void ui_switch_page_up();
-// void ui_switch_page_down();
 #endif

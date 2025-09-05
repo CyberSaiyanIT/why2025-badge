@@ -1,6 +1,8 @@
 #include "httpd.h"
 #include "esp_chip_info.h"
 
+#include "ui/person.h"
+
 #define REST_TAG  __FILE__
 
 static rest_server_context_t *rest_context = NULL;

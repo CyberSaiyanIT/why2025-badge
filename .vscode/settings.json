@@ -46,6 +46,9 @@
         "esp_lcd_panel_io.h": "c",
         "lv_types.h": "c",
         "atomic.h": "c",
-        "socialenergy.h": "c"
+        "socialenergy.h": "c",
+        "i2c_types.h": "c",
+        "i2c_master.h": "c",
+        "task.h": "c"
     }
 }
