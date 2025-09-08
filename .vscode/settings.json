@@ -49,6 +49,11 @@
         "socialenergy.h": "c",
         "i2c_types.h": "c",
         "i2c_master.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "esp_spiffs.h": "c",
+        "esp_log.h": "c",
+        "esp_chip_info.h": "c",
+        "session.h": "c",
+        "esp_http_server.h": "c"
     }
 }

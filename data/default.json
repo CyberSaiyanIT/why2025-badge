@@ -20,13 +20,15 @@
         "name": "#0000ff Bulma Brief#",
         "organization": "Capsule Corporation",
         "job": "Smart and Rich CEO",
-        "message": "You should always embrace your uniqueness."
+        "message": "You should always embrace your uniqueness.",
+        "url": "https://dragonball.fandom.com/wiki/Bulma"
     },
     "secret": {
         "name": "#ff0000 Android 16#",
         "organization": "Z Figthers",
         "job": "Cyborg and soldier",
-        "message": "I may be able to offer some help here."
+        "message": "I may be able to offer some help here.",
+        "url": "https://dragonball.fandom.com/wiki/Android_16"
     },    
     "display": {
         "brightness_max": 205,

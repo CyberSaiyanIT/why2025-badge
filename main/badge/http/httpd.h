@@ -9,10 +9,9 @@
 #include "esp_system.h"
 #include "esp_log.h"
 #include "esp_vfs.h"
-#include "cJSON.h"
 
-#include "badge.h"
-#include "ui/ui.h"
+
+#include "../badge.h"
 
 #define REST_CHECK(a, str, goto_tag, ...)                                              \
     do                                                                                 \
@@ -25,7 +24,7 @@
     } while (0)
 
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + 128)
-#define SCRATCH_BUFSIZE (2048)
+#define SCRATCH_BUFSIZE (1048)
 #define BASE_PATH "/data/www"
 #define API_ENDPOINT "/api/v1/"
 #define API_ENDPOINT_WILDCARD "/api/v1/*"
@@ -35,10 +34,11 @@ typedef struct rest_server_context {
     char scratch[SCRATCH_BUFSIZE];
 } rest_server_context_t;
 
-#define SESSION_KEY_LEN 8
 
+extern rest_server_context_t rest_context;
+void httpd_init();
 void disconnect_handler(void* arg, esp_event_base_t event_base,
-                               int32_t event_id, void* event_data);
+                        int32_t event_id, void* event_data);
 
 void connect_handler(void* arg, esp_event_base_t event_base,
                                int32_t event_id, void* event_data);

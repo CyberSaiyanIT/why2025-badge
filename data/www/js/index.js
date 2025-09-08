@@ -11,13 +11,14 @@ var person_name_input = document.querySelector("#person-name");
 var person_organization_input = document.querySelector("#person-organization");
 var person_job_input = document.querySelector("#person-job");
 var person_message_input = document.querySelector("#person-message");
+var person_url_input = document.querySelector("#person-url");
 
 var secret_form = document.querySelector("#secret-form");
 var secret_name_input = document.querySelector("#secret-name");
 var secret_organization_input = document.querySelector("#secret-organization");
 var secret_job_input = document.querySelector("#secret-job");
 var secret_message_input = document.querySelector("#secret-message");
-
+var secret_url_input = document.querySelector("#secret-url");
 
 
 var wifi_ssid_form = document.querySelector("#wifi-ssid-form");
@@ -65,6 +66,7 @@ async function check_authentication(key) {
             setInput(person_organization_input, person.organization)
             setInput(person_job_input, person.job)
             setInput(person_message_input, person.message)
+            setInput(person_url_input, person.url)
         });
         query_secret(key, null, null, null, null).then(secret => {
             console.log(secret)
@@ -72,6 +74,7 @@ async function check_authentication(key) {
             setInput(secret_organization_input, secret.organization)
             setInput(secret_job_input, secret.job)
             setInput(secret_message_input, secret.message)
+            setInput(secret_url_input, secret.url)
         });
 
 
@@ -228,11 +231,12 @@ person_form.addEventListener("submit", function (evt) {
 
     if (person_name_input.value.length > 0) {
         query_person(getCookie("key"), person_name_input.value, person_organization_input.value,
-            person_job_input.value, person_message_input.value).then(person => {
+            person_job_input.value, person_message_input.value,  person_url_input.value).then(person => {
                 setInput(person_name_input, person.name)
                 setInput(person_organization_input, person.organization)
                 setInput(person_job_input, person.job)
                 setInput(person_message_input, person.message)
+                setInput(person_url_input, person.url)
             }).then(() => Toastify({
                 text: "Person successfully changed.",
                 duration: 3e3,
@@ -255,11 +259,12 @@ secret_form.addEventListener("submit", function (evt) {
 
     if (secret_name_input.value.length > 0) {
         query_secret(getCookie("key"), secret_name_input.value, secret_organization_input.value,
-            secret_job_input.value, secret_message_input.value).then(secret => {
+            secret_job_input.value, secret_message_input.value,  secret_url_input.value).then(secret => {
                 setInput(secret_name_input, secret.name)
                 setInput(secret_organization_input, secret.organization)
                 setInput(secret_job_input, secret.job)
                 setInput(secret_message_input, secret.message)
+                setInput(secret_url_input, secret.url)
             }).then(() => Toastify({
                 text: "Secret person successfully changed.",
                 duration: 3e3,

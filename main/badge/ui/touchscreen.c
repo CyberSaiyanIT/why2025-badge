@@ -3,6 +3,7 @@
 #include "esp_log.h"
 #include "../common/i2c.h"
 #include "lcd.h"
+#include "backlight.h"
 
 uint16_t touchscreen_read_cmd(const tsc2007_function func) {
   uint8_t buf[2];
@@ -52,6 +53,8 @@ static void touchscreen_read(lv_indev_t *indev, lv_indev_data_t *data) {
   point_t touchscreen_point;
 
   if (touchscreen_i2c_read(&touchscreen_point)) {
+    if (ui_update_backlight(true))
+      return;
     data->point.x = touchscreen_point.x;
     data->point.y = touchscreen_point.y;
     data->state   = LV_INDEV_STATE_PRESSED;

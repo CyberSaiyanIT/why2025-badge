@@ -28,7 +28,7 @@
 #define LCD_CMD_BITS        8
 #define LCD_PARAM_BITS      8
 
-#define LVGL_DRAW_BUF_LINES 80  // number of display lines in each draw buffer
+#define LVGL_DRAW_BUF_LINES 120  // number of display lines in each draw buffer
 #define BYTES_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB888))
 #define LVGL_BUF_SIZE LCD_H_RES * LCD_V_RES / 10 * BYTES_PER_PIXEL
 

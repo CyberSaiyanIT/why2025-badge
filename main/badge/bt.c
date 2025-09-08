@@ -296,7 +296,7 @@ void bt_init()
     }
 
     /* A queue for storing received HCI packets. */
-    adv_queue = xQueueCreate(15, sizeof(host_rcv_data_t));
+    adv_queue = xQueueCreate(64, sizeof(host_rcv_data_t));
     if (adv_queue == NULL) {
         ESP_LOGE(__FILE__, "Queue creation failed\n");
         return;

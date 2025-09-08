@@ -84,14 +84,15 @@ async function query_name(key, name) {
         return Promise.reject(error)
     })
 }
-async function query_person(key, name, organization, job, message) {
+async function query_person(key, name, organization, job, message, url) {
     return query("person", {
         key: key,
         person: {
             name: name,
             organization: organization,
             job: job,
-            message: message
+            message: message,
+            url, url
         }
     }).then(data => {
         return data.person
@@ -99,14 +100,15 @@ async function query_person(key, name, organization, job, message) {
         return Promise.reject(error)
     })
 }
-async function query_secret(key, name, organization, job, message) {
+async function query_secret(key, name, organization, job, message, url) {
     return query("secret", {
         key: key,
         secret: {
             name: name,
             organization: organization,
             job: job,
-            message: message
+            message: message,
+            url:url
         }
     }).then(data => {
         return data.secret

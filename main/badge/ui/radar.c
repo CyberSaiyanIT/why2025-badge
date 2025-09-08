@@ -72,7 +72,7 @@ lv_obj_t *ui_screen_radar_init() {
   // Page for radar
   LV_IMG_DECLARE(img_radar);
 
-  screen_radar = lv_obj_create(NULL);
+  screen_radar  = lv_obj_create(NULL);
   lv_obj_t *img = lv_img_create(screen_radar);
   lv_img_set_src(img, &img_radar);
   lv_obj_align(img, LV_ALIGN_TOP_LEFT, 0, 0);

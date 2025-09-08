@@ -10,6 +10,7 @@
 #include "esp_log.h"
 
 void nvs_init();
+void spiffs_size();
 void spiffs_init();
 
 #endif

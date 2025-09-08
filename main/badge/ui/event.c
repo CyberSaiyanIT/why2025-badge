@@ -1,4 +1,5 @@
 #include "event.h"
+#include "cJSON.h"
 
 static lv_obj_t *table_event;
 

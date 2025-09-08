@@ -5,7 +5,7 @@ static lv_obj_t *admin_switch_text, *admin_switch_sta_text, *admin_sync_text;
 static lv_obj_t *admin_ssid, *admin_pass;
 static lv_obj_t *admin_client_ip, *admin_gateway_ip;
 
-static bool ap_started = false;
+static bool ap_started    = false;
 static bool sta_connected = false;
 
 static uint8_t admin_state = ADMIN_STATE_OFF;
@@ -51,7 +51,7 @@ void ui_ap_stop_handler() {
   lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
 
   lv_obj_clear_state(admin_switch, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_btn_set_state(admin_switch,
+  // lv_button_set_state(admin_switch,
   // LV_BTN_STATE_RELEASED);//enabl(admin_switch);
   admin_state = ADMIN_STATE_OFF;
 }
@@ -64,7 +64,7 @@ void ui_sta_connected_handler() {
   // ESP_LOGI("UI", "Current screen: %d", current_screen);
 
   lv_obj_add_state(admin_switch_sta, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_btn_set_state(admin_switch_sta, LV_BTN_STATE_CHECKED_PRESSED);
+  // lv_button_set_state(admin_switch_sta, LV_BTN_STATE_CHECKED_PRESSED);
   lv_label_set_text(admin_switch_sta_text, "Downloading...");
 
   // Update IP information when connected as station immediately
@@ -82,7 +82,7 @@ void ui_sta_connected_handler() {
 void ui_sta_disconnected_handler() {
   sta_connected = false;
   lv_obj_clear_state(admin_switch_sta, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_btn_set_state(admin_switch_sta, LV_BTN_STATE_RELEASED);
+  // lv_button_set_state(admin_switch_sta, LV_BTN_STATE_RELEASED);
   lv_obj_add_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
   admin_state = ADMIN_STATE_OFF;
@@ -102,16 +102,17 @@ void ui_manual_ip_update() {
 }
 
 void ui_force_show_ip_labels() {
-  ESP_LOGI("UI", "Force showing IP labels for testing - calling "
-                 "ui_update_ip_info instead");
+  ESP_LOGI("UI",
+           "Force showing IP labels for testing - calling "
+           "ui_update_ip_info instead");
   ui_update_ip_info();
 }
 
 void ui_connection_progress(uint8_t cur, uint8_t max) {
   if (cur != max) {
     char buf[BADGE_BUF_SIZE + 20] = {
-        0}; // Increase the size of buf to accommodate the entire formatted
-            // string
+        0};  // Increase the size of buf to accommodate the entire formatted
+             // string
     snprintf(buf, sizeof(buf), "Connecting (%d/%d)", cur, max);
     lv_label_set_text(admin_switch_sta_text, buf);
     lv_obj_clear_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
@@ -123,7 +124,7 @@ void ui_connection_progress(uint8_t cur, uint8_t max) {
 
 void ui_toggle_sync() {
   lv_obj_clear_state(admin_sync, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_btn_set_state(admin_sync, LV_BTN_STATE_RELEASED);
+  // lv_button_set_state(admin_sync, LV_BTN_STATE_RELEASED);
   ui_send_wifi_event(EVENT_STA_STOP);
 }
 
@@ -131,9 +132,9 @@ void ui_list_all_netifs() {
   ESP_LOGI("UI", "=== LISTING ALL NETWORK INTERFACES ===");
 
   // Try to iterate through all available network interfaces
-  esp_netif_t *netif = NULL;
+  esp_netif_t *netif      = NULL;
   esp_netif_t *temp_netif = esp_netif_next_unsafe(netif);
-  int count = 0;
+  int count               = 0;
 
   while (temp_netif != NULL) {
     count++;
@@ -247,9 +248,9 @@ void ui_update_ip_info() {
       "UI",
       "Primary methods failed, trying to iterate through all interfaces...");
 
-  esp_netif_t *netif = NULL;
+  esp_netif_t *netif      = NULL;
   esp_netif_t *temp_netif = esp_netif_next_unsafe(netif);
-  bool ip_found = false;
+  bool ip_found           = false;
 
   while (temp_netif != NULL && !ip_found) {
     esp_netif_ip_info_t ip_info;
@@ -300,17 +301,27 @@ void ui_update_ip_info() {
   ESP_LOGI("UI", "=== END IP INFO DEBUG ===");
 }
 
+static void ui_screen_admin_switch(lv_event_t *event) {
+  admin_button_up();
+}
+
+static void ui_screen_admin_switch_sta(lv_event_t *event) {
+  admin_button_down();
+}
+
 lv_obj_t *ui_screen_admin_init() {
   // page for admin
   lv_obj_t *screen_admin = lv_obj_create(NULL);
   /* ADMIN SWITCH */
-  admin_switch = lv_btn_create(screen_admin);
+  admin_switch = lv_button_create(screen_admin);
   lv_obj_set_size(admin_switch, 200, 50);
   lv_obj_set_pos(admin_switch, 60, 35);
+  lv_obj_add_event_cb(admin_switch, ui_screen_admin_switch, LV_EVENT_SINGLE_CLICKED, NULL);
   admin_switch_text = lv_label_create(admin_switch);
   lv_label_set_text(admin_switch_text, "TURN ON AP");
+  lv_obj_center(admin_switch_text);
 
-  admin_sync = lv_btn_create(screen_admin);
+  admin_sync = lv_button_create(screen_admin);
   lv_obj_set_size(admin_sync, 200, 50);
   lv_obj_set_pos(admin_sync, 60, 180);
   admin_sync_text = lv_label_create(admin_sync);
@@ -335,11 +346,13 @@ lv_obj_t *ui_screen_admin_init() {
   lv_label_set_text(admin_gateway_ip, "Gateway: [Not Available]");
   lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
 
-  admin_switch_sta = lv_btn_create(screen_admin);
+  admin_switch_sta = lv_button_create(screen_admin);
   lv_obj_set_size(admin_switch_sta, 200, 50);
   lv_obj_set_pos(admin_switch_sta, 60, 180);
+  lv_obj_add_event_cb(admin_switch_sta, ui_screen_admin_switch_sta, LV_EVENT_SINGLE_CLICKED, NULL);
   admin_switch_sta_text = lv_label_create(admin_switch_sta);
   lv_label_set_text(admin_switch_sta_text, "SYNC SCHEDULE");
+  lv_obj_center(admin_switch_sta_text);
 
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_START,
                                              &ui_ap_start_handler, NULL));
@@ -358,40 +371,40 @@ lv_obj_t *ui_screen_admin_init() {
 
 void admin_button_up() {
   switch (admin_state) {
-  case ADMIN_STATE_OFF: // AP and STA disabled: enable AP
-    ui_send_wifi_event(EVENT_HOTSPOT_START);
-    lv_obj_add_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
-    admin_state = ADMIN_STATE_AP;
-    break;
-  case ADMIN_STATE_AP: // AP enabled: disable AP
-    ui_send_wifi_event(EVENT_HOTSPOT_STOP);
-    lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_flag(admin_ssid, LV_OBJ_FLAG_HIDDEN);
-    admin_state = ADMIN_STATE_OFF;
-    break;
-  case ADMIN_STATE_STA: // STA connected: manual IP refresh
-    ESP_LOGI("UI", "Manual IP refresh triggered via UP button");
-    ui_manual_ip_update();
-    // Also test forcing labels to be visible for debugging
-    ui_force_show_ip_labels();
-    break;
+    case ADMIN_STATE_OFF:  // AP and STA disabled: enable AP
+      ui_send_wifi_event(EVENT_HOTSPOT_START);
+      lv_obj_add_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
+      admin_state = ADMIN_STATE_AP;
+      break;
+    case ADMIN_STATE_AP:  // AP enabled: disable AP
+      ui_send_wifi_event(EVENT_HOTSPOT_STOP);
+      lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(admin_ssid, LV_OBJ_FLAG_HIDDEN);
+      admin_state = ADMIN_STATE_OFF;
+      break;
+    case ADMIN_STATE_STA:  // STA connected: manual IP refresh
+      ESP_LOGI("UI", "Manual IP refresh triggered via UP button");
+      ui_manual_ip_update();
+      // Also test forcing labels to be visible for debugging
+      ui_force_show_ip_labels();
+      break;
   }
 }
 
 void admin_button_down() {
   switch (admin_state) {
-  case ADMIN_STATE_OFF: // AP and STA disabled: enable STA
-    ui_send_wifi_event(EVENT_STA_START);
-    lv_label_set_text(admin_switch_sta_text, "Started...");
-    admin_state = ADMIN_STATE_STA;
-    break;
-  case ADMIN_STATE_AP: // AP enabled: test showing IP labels
-    ESP_LOGI("UI", "Force show IP labels test (DOWN button in AP mode)");
-    ui_force_show_ip_labels();
-    break;
-  case ADMIN_STATE_STA: // STA mode: test showing IP labels
-    ESP_LOGI("UI", "Force show IP labels test (DOWN button in STA mode)");
-    ui_force_show_ip_labels();
-    break;
+    case ADMIN_STATE_OFF:  // AP and STA disabled: enable STA
+      ui_send_wifi_event(EVENT_STA_START);
+      lv_label_set_text(admin_switch_sta_text, "Started...");
+      admin_state = ADMIN_STATE_STA;
+      break;
+    case ADMIN_STATE_AP:  // AP enabled: test showing IP labels
+      ESP_LOGI("UI", "Force show IP labels test (DOWN button in AP mode)");
+      ui_force_show_ip_labels();
+      break;
+    case ADMIN_STATE_STA:  // STA mode: test showing IP labels
+      ESP_LOGI("UI", "Force show IP labels test (DOWN button in STA mode)");
+      ui_force_show_ip_labels();
+      break;
   }
 }

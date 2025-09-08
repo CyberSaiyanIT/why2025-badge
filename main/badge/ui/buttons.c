@@ -16,7 +16,7 @@ static int8_t counter_screen = -1;  // Initialize to invalid screen index
 static QueueHandle_t button_events;
 lv_timer_t *buttons_timer_handle;
 
-static screen_buttons_t button_action[NUM_SCREENS] = {
+static screen_buttons_t button_action[] = {
     {NULL, NULL},                                        // LOGO
     {person_button_up, person_button_down},              // PERSON
     {socialenergy_button_up, socialenergy_button_down},  // SOCIALENERGY
