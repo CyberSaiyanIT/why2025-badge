@@ -25,11 +25,9 @@ extern "C" {
  *********************/
 #define DISP_BUF_SIZE (LV_HOR_RES_MAX * 40)
 
-#define ST7735S_DC   CONFIG_LV_DISP_PIN_DC
-#define ST7735S_RST  CONFIG_LV_DISP_PIN_RST
-
-#define AXP192_SDA   CONFIG_LV_AXP192_PIN_SDA
-#define AXP192_SCL   CONFIG_LV_AXP192_PIN_SCL
+#define ST7735S_DC       CONFIG_LV_DISP_PIN_DC
+#define ST7735S_RST      CONFIG_LV_DISP_PIN_RST
+#define ST7735S_USE_RST  CONFIG_LV_DISP_USE_RST
 
 #define ST7735S_INVERT_COLORS CONFIG_LV_INVERT_COLORS
 
@@ -39,8 +37,19 @@ extern "C" {
 //      https://github.com/adafruit/Adafruit-ST7735-Library
 //
 #define ST7735_GREENTAB160x80 // For 160 x 80 display (BGR, inverted, 26 / 1 offset)
+
+// TODO: this should be config option
+#if CONFIG_LV_HOR_RES_MAX==128 && CONFIG_LV_VER_RES_MAX==128
+#define COLSTART            2
+#define ROWSTART            3
+#elif CONFIG_LV_HOR_RES_MAX==128 && CONFIG_LV_VER_RES_MAX==80
 #define COLSTART            26
 #define ROWSTART            1
+#else
+#define COLSTART            0
+#define ROWSTART            0
+#endif
+
 
 // Delay between some initialisation commands
 #define TFT_INIT_DELAY      0x80
@@ -133,7 +142,6 @@ extern "C" {
 
 void st7735s_init(void);
 void st7735s_flush(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_map);
-void st7735s_enable_backlight(bool backlight);
 void st7735s_sleep_in(void);
 void st7735s_sleep_out(void);
 

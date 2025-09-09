@@ -12,6 +12,10 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_idf_version.h"
+#if ESP_IDF_VERSION <= ESP_IDF_VERSION_VAL(5,0,0)
+#include "rom/gpio.h"
+#endif
 
 /*********************
  *      DEFINES
@@ -148,29 +152,22 @@ void ra8875_init(void)
 
     ESP_LOGI(TAG, "Initializing RA8875...");
 
-#if (CONFIG_LV_DISP_PIN_BCKL == 15)
-    gpio_config_t io_conf;
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = GPIO_SEL_15;
-    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpio_config(&io_conf);
-#endif
-
     // Initialize non-SPI GPIOs
+
+#if RA8875_USE_RST
+#if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5,0,0)
     gpio_pad_select_gpio(RA8875_RST);
-    gpio_set_direction(RA8875_RST, GPIO_MODE_OUTPUT);
-#ifdef CONFIG_LV_DISP_PIN_BCKL
-    gpio_pad_select_gpio(CONFIG_LV_DISP_PIN_BCKL);
-    gpio_set_direction(CONFIG_LV_DISP_PIN_BCKL, GPIO_MODE_OUTPUT);
+#else
+    esp_rom_gpio_pad_select_gpio(RA8875_RST);
 #endif
+    gpio_set_direction(RA8875_RST, GPIO_MODE_OUTPUT);
 
     // Reset the RA8875
     gpio_set_level(RA8875_RST, 0);
-    vTaskDelay(DIV_ROUND_UP(100, portTICK_RATE_MS));
+    vTaskDelay(DIV_ROUND_UP(100, portTICK_PERIOD_MS));
     gpio_set_level(RA8875_RST, 1);
-    vTaskDelay(DIV_ROUND_UP(100, portTICK_RATE_MS));
+    vTaskDelay(DIV_ROUND_UP(100, portTICK_PERIOD_MS));
+#endif
 
     // Initalize RA8875 clocks (SPI must be decelerated before initializing clocks)
     disp_spi_change_device_speed(SPI_CLOCK_SPEED_SLOW_HZ);
@@ -194,28 +191,8 @@ void ra8875_init(void)
         ESP_LOGW(TAG, "WARNING: Memory clear timed out; RA8875 may be unresponsive.");
     }
 
-    // Enable the display and backlight
+    // Enable the display
     ra8875_enable_display(true);
-    ra8875_enable_backlight(true);
-}
-
-void ra8875_enable_backlight(bool backlight)
-{
-#if CONFIG_LV_ENABLE_BACKLIGHT_CONTROL
-    ESP_LOGI(TAG, "%s backlight.", backlight ? "Enabling" : "Disabling");
-    uint32_t tmp = 0;
-
-    #if CONFIG_LV_BACKLIGHT_ACTIVE_LVL
-        tmp = backlight ? 1 : 0;
-    #else
-        tmp = backlight ? 0 : 1;
-    #endif
-
-#ifdef CONFIG_LV_DISP_PIN_BCKL
-    gpio_set_level(CONFIG_LV_DISP_PIN_BCKL, tmp);
-#endif
-
-#endif
 }
 
 void ra8875_enable_display(bool enable)
@@ -282,21 +259,21 @@ void ra8875_sleep_in(void)
     ra8875_configure_clocks(false);
 
     ra8875_write_cmd(RA8875_REG_PWRR, 0x00);           // Power and Display Control Register (PWRR)
-    vTaskDelay(DIV_ROUND_UP(20, portTICK_RATE_MS));
+    vTaskDelay(DIV_ROUND_UP(20, portTICK_PERIOD_MS));
     ra8875_write_cmd(RA8875_REG_PWRR, 0x02);           // Power and Display Control Register (PWRR)
 }
 
 void ra8875_sleep_out(void)
 {
     ra8875_write_cmd(RA8875_REG_PWRR, 0x00);           // Power and Display Control Register (PWRR)
-    vTaskDelay(DIV_ROUND_UP(20, portTICK_RATE_MS));
+    vTaskDelay(DIV_ROUND_UP(20, portTICK_PERIOD_MS));
 
     ra8875_configure_clocks(true);
 
     disp_spi_change_device_speed(-1);
 
     ra8875_write_cmd(RA8875_REG_PWRR, 0x80);           // Power and Display Control Register (PWRR)
-    vTaskDelay(DIV_ROUND_UP(20, portTICK_RATE_MS));
+    vTaskDelay(DIV_ROUND_UP(20, portTICK_PERIOD_MS));
 }
 
 uint8_t ra8875_read_cmd(uint8_t cmd)
@@ -329,7 +306,7 @@ void ra8875_configure_clocks(bool high_speed)
     vTaskDelay(1);
 
     ra8875_write_cmd(RA8875_REG_PCSR, PCSR_VAL);            // Pixel Clock Setting Register (PCSR)
-    vTaskDelay(DIV_ROUND_UP(20, portTICK_RATE_MS));
+    vTaskDelay(DIV_ROUND_UP(20, portTICK_PERIOD_MS));
 }
 
 static void ra8875_set_window(unsigned int xs, unsigned int xe, unsigned int ys, unsigned int ye)

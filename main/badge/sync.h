@@ -9,6 +9,7 @@
 
 #include "badge.h"
 
+
 #define SYNC_PERIOD_MS 30 * 60 * 1000
 
 void schedule_sync_handler(bool force);

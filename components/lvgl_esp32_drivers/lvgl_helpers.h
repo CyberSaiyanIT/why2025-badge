@@ -16,11 +16,20 @@ extern "C" {
 
 #include "lvgl_spi_conf.h"
 #include "lvgl_tft/disp_driver.h"
+#include "lvgl_tft/esp_lcd_backlight.h"
 #include "lvgl_touch/touch_driver.h"
 
 /*********************
  *      DEFINES
  *********************/
+ 
+/* Backward compatibility for LV_HOR_RES_MAX & LV_VER_RES_MAX */
+#if defined (CONFIG_LV_HOR_RES_MAX)
+#define LV_HOR_RES_MAX CONFIG_LV_HOR_RES_MAX
+#endif
+#if defined (CONFIG_LV_VER_RES_MAX)
+#define LV_VER_RES_MAX CONFIG_LV_VER_RES_MAX
+#endif
 
 /* DISP_BUF_SIZE value doesn't have an special meaning, but it's the size
  * of the buffer(s) passed to LVGL as display buffers. The default values used
@@ -39,7 +48,7 @@ extern "C" {
 #if defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7789)
 #define DISP_BUF_SIZE  (LV_HOR_RES_MAX * 40)
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7735S
-#define DISP_BUF_SIZE  (LV_HOR_RES_MAX * 40)
+#define DISP_BUF_SIZE  (LV_HOR_RES_MAX * LV_VER_RES_MAX)
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ST7796S
 #define DISP_BUF_SIZE  (LV_HOR_RES_MAX * 40)
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_HX8357
@@ -55,7 +64,7 @@ extern "C" {
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9341
 #define DISP_BUF_SIZE  (LV_HOR_RES_MAX * 40)
 #elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_SSD1306
-#if defined (CONFIG_LV_THEME_MONO)
+#if defined (CONFIG_LV_USE_THEME_MONO)
 #define DISP_BUF_SIZE  (LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8))
 #else
 #define DISP_BUF_SIZE  (LV_HOR_RES_MAX * LV_VER_RES_MAX)
@@ -73,6 +82,10 @@ extern "C" {
 #define DISP_BUF_SIZE ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8) // 5KB
 #elif defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_UC8151D)
 #define DISP_BUF_SIZE ((LV_VER_RES_MAX * LV_VER_RES_MAX) / 8) // 2888 bytes
+#elif defined CONFIG_LV_TFT_DISPLAY_CONTROLLER_ILI9163C
+#define DISP_BUF_SIZE (LV_HOR_RES_MAX * 40)
+#elif defined (CONFIG_LV_TFT_DISPLAY_CONTROLLER_PCD8544)
+#define DISP_BUF_SIZE  (LV_HOR_RES_MAX * (LV_VER_RES_MAX / 8))
 #else
 #error "No display controller selected"
 #endif
@@ -86,14 +99,14 @@ extern "C" {
  * GLOBAL PROTOTYPES
  **********************/
 
+void lvgl_i2c_locking(void* leader);
+
 /* Initialize detected SPI and I2C bus and devices */
 void lvgl_driver_init(void);
 
 /* Initialize SPI master  */
 bool lvgl_spi_driver_init(int host, int miso_pin, int mosi_pin, int sclk_pin,
     int max_transfer_sz, int dma_channel, int quadwp_pin, int quadhd_pin);
-/* Initialize I2C master  */
-bool lvgl_i2c_driver_init(int port, int sda_pin, int scl_pin, int speed);
 
 /**********************
  *      MACROS
