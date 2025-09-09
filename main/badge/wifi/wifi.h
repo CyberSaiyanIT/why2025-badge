@@ -3,11 +3,9 @@
 
 #include <string.h>
 #include "freertos/FreeRTOS.h"
-
-#define AP_INACTIVITY_TIMEOUT_S 60
-#define AP_MAX_STA_CONN         5
-#define STA_TIMEOUT_MS          20000
-#define STA_MAXIMUM_RETRY       5
+#include "esp_timer.h"
+#include "esp_wifi.h"
+ 
 
 extern QueueHandle_t wifi_queue;
 enum enum_badge_event {
@@ -19,14 +17,10 @@ enum enum_badge_event {
   EVENT_SYNC_STOP
 };
 
-void wifi_init(void);
-
-bool start_wifi_ap(void);
-bool start_wifi_sta(void);
-bool start_wifi_apsta(void);
+extern wifi_mode_t curr_mode;
 
 void stop_wifi(void);
-
-void wifi_task(void *);
+void wifi_init(void);
+void wifi_task(void*);
 
 #endif
