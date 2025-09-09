@@ -76,7 +76,7 @@ void ui_switch_page_up() {
 }
 
 static void ui_init(void) {
-  current_screen = SCREEN_ADMIN;
+  current_screen = SCREEN_LOGO;
 
   screens[SCREEN_LOGO]         = ui_screen_splash_init();
   screens[SCREEN_PERSON]       = ui_screen_person_init();
@@ -91,8 +91,6 @@ static void ui_init(void) {
 }
 
 /*****  TASK *****/
-
-
 
 static void ui_tick_task(void *arg) { lv_tick_inc(1); }
 

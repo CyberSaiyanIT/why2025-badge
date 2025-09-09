@@ -23,7 +23,7 @@ lv_obj_t *ui_screen_splash_init() {
   lv_obj_clear_flag(screen_logo, LV_OBJ_FLAG_SCROLLABLE);
 
   logo = lv_image_create(screen_logo);
-  //lv_image_set_src(logo, STD_LOGO);
+  lv_image_set_src(logo, STD_LOGO);
   lv_obj_align(logo, LV_ALIGN_CENTER, 0, 0);
 
   /*Change the logo's background color*/

@@ -9,20 +9,16 @@ static lv_obj_t *person_message;
 static lv_obj_t *qr;
 
 void ui_set_person(bool secret) {
-  current_secret = secret;
-  if (secret == true) {
-    lv_label_set_text(person_name, badge_obj.secret.name);
-    lv_label_set_text(person_organization, badge_obj.secret.organization);
-    lv_label_set_text(person_job, badge_obj.secret.job);
-    lv_label_set_text(person_message, badge_obj.secret.message);
-    lv_qrcode_update(qr, badge_obj.secret.url, strlen(badge_obj.secret.url));
-  } else {
-    lv_label_set_text(person_name, badge_obj.person.name);
-    lv_label_set_text(person_organization, badge_obj.person.organization);
-    lv_label_set_text(person_job, badge_obj.person.job);
-    lv_label_set_text(person_message, badge_obj.person.message);
-    lv_qrcode_update(qr, badge_obj.person.url, strlen(badge_obj.person.url));
-  }
+  current_secret   = secret;
+  person_t *person = &badge_obj.person;
+  if (secret == true)
+    person = &badge_obj.secret;
+
+  lv_label_set_text(person_name, person->name);
+  lv_label_set_text(person_organization, person->organization);
+  lv_label_set_text(person_job, person->job);
+  lv_label_set_text(person_message, person->message);
+  lv_qrcode_update(qr, person->url, strlen(person->url));
 }
 
 static void ui_screen_person_event(lv_event_t *event) {
