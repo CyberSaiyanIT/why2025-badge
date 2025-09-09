@@ -23,7 +23,7 @@ void ui_sta_stop_handler();
 void ui_manual_ip_update();
 void ui_force_show_ip_labels();
 void ui_connection_progress(uint8_t cur, uint8_t max);
-void ui_toggle_sync();
+void ui_clear_sync();
 void ui_list_all_netifs();
 void ui_update_ip_info();
 lv_obj_t *ui_screen_admin_init();

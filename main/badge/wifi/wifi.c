@@ -11,38 +11,33 @@
 #include "ap.h"
 #include "sta.h"
 
-wifi_mode_t curr_mode = WIFI_MODE_NULL;
 QueueHandle_t wifi_queue;
-
-void wifi_init(void) {
-  static bool initialized = false;
-  if (initialized)
-    return;
-
-  ESP_ERROR_CHECK(esp_netif_init());
-  esp_netif_create_default_wifi_ap();
-  esp_netif_create_default_wifi_sta();
-
-  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-  wifi_ap_init();
-  wifi_sta_init();
-
-  ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
-  ESP_ERROR_CHECK(esp_wifi_start());
-
-  curr_mode   = WIFI_MODE_NULL;
-  initialized = true;
-}
 
 void stop_wifi() {
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 
-  esp_wifi_disconnect();
+  ESP_LOGI(__FILE__, "Stopping wifi");
   esp_wifi_stop();
-  esp_wifi_set_mode(WIFI_MODE_NULL);
+
+  wifi_mode_t wifi_mode;
+  ESP_LOGI(__FILE__, "Checking wifi mode");
+  ESP_ERROR_CHECK(esp_wifi_get_mode(&wifi_mode));
+  switch (wifi_mode) {
+    case WIFI_MODE_NULL:
+      ESP_LOGI(__FILE__, "Wifi is in NULL mode");
+      break;
+    case WIFI_MODE_STA:
+      ESP_LOGI(__FILE__, "Wifi is in STA mode");
+      stop_wifi_sta();
+      break;
+    case WIFI_MODE_AP:
+      ESP_LOGI(__FILE__, "Wifi is in AP mode");
+      stop_wifi_ap();
+      break;
+    default:
+      ESP_LOGE(__FILE__, "Wifi is in Unkown mode");
+      break;
+  }
   ESP_LOGI(__FILE__, "WIFI disabled");
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 }
@@ -56,7 +51,7 @@ void wifi_task(void* arg) {
   while (1) {
     if (xQueueReceive(wifi_queue, &wifi_event, portMAX_DELAY))
       switch (wifi_event) {
-        case EVENT_HOTSPOT_START:
+        case EVENT_AP_START:
           ESP_LOGI(__FILE__, "EVENT_HOTSPOT_START received");
           stop_wifi();
           start_wifi_ap();
@@ -64,20 +59,16 @@ void wifi_task(void* arg) {
         case EVENT_STA_START:
           ESP_LOGI(__FILE__, "EVENT_STA_START received");
           stop_wifi();
-          start_wifi_sta();
+          if (start_wifi_sta())
+            schedule_sync_handler(true);
+          stop_wifi();
           break;
-        case EVENT_SYNC_START:
+        case EVENT_SYNC:
           ESP_LOGI(__FILE__, "EVENT_SYNC_START received");
           schedule_sync_handler(true);
           break;
-        case EVENT_HOTSPOT_STOP:
-          ESP_LOGI(__FILE__, "EVENT_HOTSPOT_STOP received");
-          stop_wifi_ap();
-          stop_wifi();
-          break;
-        case EVENT_STA_STOP:
-          ESP_LOGI(__FILE__, "EVENT_STA_STOP received");
-          stop_wifi_sta();
+        case EVENT_STOP:
+          ESP_LOGI(__FILE__, "EVENT_STOP received");
           stop_wifi();
           break;
         default:
@@ -86,4 +77,26 @@ void wifi_task(void* arg) {
       }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
+}
+
+static void send_wifi_event(int event) { xQueueSend(wifi_queue, &event, portMAX_DELAY); }
+void start_ap() { send_wifi_event(EVENT_AP_START); }
+void start_sta() { send_wifi_event(EVENT_STA_START); }
+void start_sync() { send_wifi_event(EVENT_SYNC); }
+void stop_all() { send_wifi_event(EVENT_STOP); }
+
+void wifi_init(void) {
+  ESP_ERROR_CHECK(esp_netif_init());
+  esp_netif_create_default_wifi_ap();
+  esp_netif_create_default_wifi_sta();
+
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+  wifi_ap_init();
+  wifi_sta_init();
+
+  ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
+  ESP_ERROR_CHECK(esp_wifi_start());
 }

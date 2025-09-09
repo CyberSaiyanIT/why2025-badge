@@ -117,7 +117,7 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt) {
 
       output_len = 0;
       connected  = false;
-      ui_toggle_sync();
+      ui_clear_sync();
 
       if (errors) {
         errors = false;
@@ -175,15 +175,13 @@ void schedule_sync_handler(bool force) {
       ESP_LOGI(__FILE__, "Status = %d, content_length = %" PRId64,
                esp_http_client_get_status_code(http_client),
                esp_http_client_get_content_length(http_client));
-    } else {
+    } else
       ESP_LOGE(__FILE__, "HTTP perform failed: %s", esp_err_to_name(err));
-    }
 
     esp_err_t cleanup_err = esp_http_client_cleanup(http_client);
-    if (cleanup_err == ESP_OK) {
+    if (cleanup_err == ESP_OK)
       ESP_LOGI(__FILE__, "HTTP client cleaned up successfully");
-    } else {
+    else
       ESP_LOGE(__FILE__, "HTTP client cleanup failed: %s", esp_err_to_name(cleanup_err));
-    }
   }
 }

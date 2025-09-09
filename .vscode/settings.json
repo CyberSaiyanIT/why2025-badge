@@ -56,6 +56,7 @@
         "session.h": "c",
         "esp_http_server.h": "c",
         "esp_mac.h": "c",
-        "event_groups.h": "c"
+        "event_groups.h": "c",
+        "esp_system.h": "c"
     }
 }

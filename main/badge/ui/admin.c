@@ -12,10 +12,6 @@ static bool sta_connected = false;
 
 static uint8_t admin_state = ADMIN_STATE_OFF;
 
-void ui_send_wifi_event(int event) {
-  xQueueSend(wifi_queue, &event, portMAX_DELAY);
-}
-
 void ui_ap_start_handler() {
   ap_started = true;
 
@@ -34,10 +30,6 @@ void ui_ap_start_handler() {
   // Update IP information immediately
   ui_update_ip_info();
 
-  // TODO: Also create a delayed task to retry getting IP info
-  // xTaskCreate(ui_delayed_ip_update_task, "delayed_ip_update", 2048, NULL, 5,
-  // NULL);
-
   lv_obj_add_state(admin_switch, LV_STATE_PRESSED | LV_STATE_CHECKED);
   admin_state = ADMIN_STATE_AP;
 }
@@ -53,8 +45,6 @@ void ui_ap_stop_handler() {
   lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
 
   lv_obj_clear_state(admin_switch, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_button_set_state(admin_switch,
-  // LV_BTN_STATE_RELEASED);//enabl(admin_switch);
   admin_state = ADMIN_STATE_OFF;
 }
 
@@ -63,10 +53,8 @@ void ui_sta_connected_handler() {
 
   ESP_LOGI("UI", "STA connected handler called");
   ESP_LOGI("UI", "Current admin_state: %d", admin_state);
-  // ESP_LOGI("UI", "Current screen: %d", current_screen);
 
   lv_obj_add_state(admin_switch_sta, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_button_set_state(admin_switch_sta, LV_BTN_STATE_CHECKED_PRESSED);
   lv_label_set_text(admin_switch_sta_text, "Downloading...");
 
   // Update IP information when connected as station immediately
@@ -74,17 +62,12 @@ void ui_sta_connected_handler() {
   ui_update_ip_info();
   ESP_LOGI("UI", "ui_update_ip_info call completed from STA connected handler");
 
-  // TODO: Also create a delayed task to retry getting IP info
-  // xTaskCreate(ui_delayed_ip_update_task, "delayed_ip_update", 2048, NULL, 5,
-  // NULL);
-
   admin_state = ADMIN_STATE_STA;
 }
 
 void ui_sta_disconnected_handler() {
   sta_connected = false;
   lv_obj_clear_state(admin_switch_sta, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_button_set_state(admin_switch_sta, LV_BTN_STATE_RELEASED);
   lv_obj_add_flag(admin_client_ip, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(admin_gateway_ip, LV_OBJ_FLAG_HIDDEN);
   admin_state = ADMIN_STATE_OFF;
@@ -112,9 +95,8 @@ void ui_force_show_ip_labels() {
 
 void ui_connection_progress(uint8_t cur, uint8_t max) {
   if (cur != max) {
-    char buf[BADGE_BUF_SIZE + 20] = {
-        0};  // Increase the size of buf to accommodate the entire formatted
-             // string
+    char buf[BADGE_BUF_SIZE + 20] = {0};  // Increase the size of buf to accommodate the entire formatted
+                                          // string
     snprintf(buf, sizeof(buf), "Connecting (%d/%d)", cur, max);
     lv_label_set_text(admin_switch_sta_text, buf);
     lv_obj_clear_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
@@ -124,10 +106,8 @@ void ui_connection_progress(uint8_t cur, uint8_t max) {
   }
 }
 
-void ui_toggle_sync() {
+void ui_clear_sync() {
   lv_obj_clear_state(admin_sync, LV_STATE_PRESSED | LV_STATE_CHECKED);
-  // lv_button_set_state(admin_sync, LV_BTN_STATE_RELEASED);
-  ui_send_wifi_event(EVENT_STA_STOP);
 }
 
 void ui_list_all_netifs() {
@@ -303,13 +283,9 @@ void ui_update_ip_info() {
   ESP_LOGI("UI", "=== END IP INFO DEBUG ===");
 }
 
-static void ui_screen_admin_switch(lv_event_t *event) {
-  admin_button_up();
-}
+static void ui_screen_admin_switch(lv_event_t *event) { admin_button_up(); }
 
-static void ui_screen_admin_switch_sta(lv_event_t *event) {
-  admin_button_down();
-}
+static void ui_screen_admin_switch_sta(lv_event_t *event) { admin_button_down(); }
 
 lv_obj_t *ui_screen_admin_init() {
   // page for admin
@@ -356,30 +332,18 @@ lv_obj_t *ui_screen_admin_init() {
   lv_label_set_text(admin_switch_sta_text, "SYNC SCHEDULE");
   lv_obj_center(admin_switch_sta_text);
 
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_START,
-                                             &ui_ap_start_handler, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STOP,
-                                             &ui_ap_stop_handler, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP,
-                                             &ui_sta_connected_handler, NULL));
-  ESP_ERROR_CHECK(
-      esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED,
-                                 &ui_sta_disconnected_handler, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_STOP,
-                                             &ui_sta_stop_handler, NULL));
-
   return (screen_admin);
 }
 
 void admin_button_up() {
   switch (admin_state) {
     case ADMIN_STATE_OFF:  // AP and STA disabled: enable AP
-      ui_send_wifi_event(EVENT_HOTSPOT_START);
+      start_ap();
       lv_obj_add_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
       admin_state = ADMIN_STATE_AP;
       break;
     case ADMIN_STATE_AP:  // AP enabled: disable AP
-      ui_send_wifi_event(EVENT_HOTSPOT_STOP);
+      stop_all();
       lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
       lv_obj_add_flag(admin_ssid, LV_OBJ_FLAG_HIDDEN);
       admin_state = ADMIN_STATE_OFF;
@@ -396,7 +360,7 @@ void admin_button_up() {
 void admin_button_down() {
   switch (admin_state) {
     case ADMIN_STATE_OFF:  // AP and STA disabled: enable STA
-      ui_send_wifi_event(EVENT_STA_START);
+      start_sta();
       lv_label_set_text(admin_switch_sta_text, "Started...");
       admin_state = ADMIN_STATE_STA;
       break;
