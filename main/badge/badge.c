@@ -1,58 +1,20 @@
 #include <stdio.h>
 #include <string.h>
+#include "cJSON.h"
 
 #include "badge.h"
-#include "cJSON.h"
-ble_node_t ble_nodes[MAX_NEARBY_NODE];
+
+#include "led.h"
+#include "bt.h"
+#include "wifi/wifi.h"
+#include "http/httpd.h"
+#include "schedule.h"
+#include "ui/ui.h"
+
+
 badge_obj_t badge_obj;
 
-uint8_t count_ble_nodes() {
-  uint8_t cnt = 0;
-  for (int i = 0; i < MAX_NEARBY_NODE; i++) {
-    if (ble_nodes[i].active) cnt++;
-  }
-  return cnt;
-}
-
-bool check_ble_set() {
-  uint8_t set_bits = 0;
-  set_bits |= 1 << (badge_obj.device_id - 1);
-
-  for (int i = 0; i < MAX_NEARBY_NODE; i++) {
-    if (ble_nodes[i].active) {
-      set_bits |= 1 << (ble_nodes[i].id - 1);
-    }
-  }
-  return set_bits == 0x7F;
-}
-
-char *load_schedule_from_file() {
-  FILE *fp = fopen(SCHEDULE_FILE, "r");
-  ESP_LOGI(__FILE__, "File to open: %s", SCHEDULE_FILE);
-
-  if (!fp) {
-    ESP_LOGE(__FILE__, "Cannot open file %s", SCHEDULE_FILE);
-    return NULL;
-  }
-
-  /* Get the file size */
-  fseek(fp, 0, SEEK_END);     // seek to end of file
-  int file_size = ftell(fp);  // get current file pointer
-  fseek(fp, 0, SEEK_SET);     // seek back to beginning of file
-
-  ESP_LOGI(__FILE__, "schedule: max contiguous free_heap_size = %lu\n", heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-  char *data_buf = (char *)malloc(file_size + 1);
-  if (!data_buf) {
-    fclose(fp);
-    ESP_LOGE(__FILE__, "Cannot allocate memory of %d bytes", file_size);
-    return NULL;
-  }
-  fread(data_buf, 1, file_size, fp);
-  data_buf[file_size] = '\0';  // Null-terminate the string
-  fclose(fp);
-  return data_buf;
-}
-
+ 
 char *load_file_content(const char *filename) {
   struct stat file_stat;
   if (stat(filename, &file_stat) == -1) {

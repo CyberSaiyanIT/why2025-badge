@@ -1,4 +1,6 @@
 #include "admin.h"
+#include "../wifi/wifi.h"
+#include "esp_wifi.h"
 
 static lv_obj_t *admin_switch, *admin_switch_sta, *admin_sync;
 static lv_obj_t *admin_switch_text, *admin_switch_sta_text, *admin_sync_text;

@@ -29,13 +29,6 @@
 #define API_ENDPOINT "/api/v1/"
 #define API_ENDPOINT_WILDCARD "/api/v1/*"
 
-typedef struct rest_server_context {
-    char base_path[ESP_VFS_PATH_MAX + 1];
-    char scratch[SCRATCH_BUFSIZE];
-} rest_server_context_t;
-
-
-extern rest_server_context_t rest_context;
 void httpd_init();
 void disconnect_handler(void* arg, esp_event_base_t event_base,
                         int32_t event_id, void* event_data);

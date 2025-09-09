@@ -1,10 +1,44 @@
-#include "sync.h"
+#include "schedule.h"
 #include <esp_heap_caps.h>
 #include "ui/admin.h"
 #include "ui/event.h"
+#include "esp_timer.h"
+#include "schedule.h"
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "esp_log.h"
+#include "esp_mac.h"
+
 static int64_t last_run    = 0;
 static int64_t current_run = 0;
 static bool errors, forced, connected = false;
+
+char *load_schedule_from_file() {
+  FILE *fp = fopen(SCHEDULE_FILE, "r");
+  ESP_LOGI(__FILE__, "File to open: %s", SCHEDULE_FILE);
+
+  if (!fp) {
+    ESP_LOGE(__FILE__, "Cannot open file %s", SCHEDULE_FILE);
+    return NULL;
+  }
+
+  /* Get the file size */
+  fseek(fp, 0, SEEK_END);     // seek to end of file
+  int file_size = ftell(fp);  // get current file pointer
+  fseek(fp, 0, SEEK_SET);     // seek back to beginning of file
+
+  ESP_LOGI(__FILE__, "schedule: max contiguous free_heap_size = %lu\n", heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+  char *data_buf = (char *)malloc(file_size + 1);
+  if (!data_buf) {
+    fclose(fp);
+    ESP_LOGE(__FILE__, "Cannot allocate memory of %d bytes", file_size);
+    return NULL;
+  }
+  fread(data_buf, 1, file_size, fp);
+  data_buf[file_size] = '\0';  // Null-terminate the string
+  fclose(fp);
+  return data_buf;
+}
 
 esp_err_t _http_event_handle(esp_http_client_event_t *evt) {
   static int output_len = 0;  // Stores number of bytes read

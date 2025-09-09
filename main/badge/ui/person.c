@@ -1,4 +1,5 @@
 #include "person.h"
+#include "ui.h"
 
 static bool current_secret = false;
 static lv_obj_t *person_name;

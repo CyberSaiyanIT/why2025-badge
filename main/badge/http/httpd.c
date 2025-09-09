@@ -3,14 +3,16 @@
 #include "file.h"
 #include "api.h"
 #include "session.h"
+#include "esp_event.h"
+#include "esp_wifi.h"
+#include "esp_netif.h"
 
 #define REST_TAG __FILE__
 
 static uint8_t client_count;
-static httpd_handle_t *server;
+static httpd_handle_t server = NULL;
 
-static httpd_handle_t start_webserver(void) {
-  httpd_handle_t server = NULL;
+static esp_err_t start_webserver(void) {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.uri_match_fn   = httpd_uri_match_wildcard;
 
@@ -29,7 +31,7 @@ static httpd_handle_t start_webserver(void) {
         .method   = HTTP_POST,
         .handler  = post_handler,
         .user_ctx = NULL};
-    httpd_register_uri_handler(server, &common_post_uri);
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &common_post_uri));
 
     /* URI handler for getting web server files */
     httpd_uri_t common_get_uri = {
@@ -37,18 +39,12 @@ static httpd_handle_t start_webserver(void) {
         .method   = HTTP_GET,
         .handler  = get_handler,
         .user_ctx = NULL};
-    httpd_register_uri_handler(server, &common_get_uri);
-    return server;
+    ESP_ERROR_CHECK(httpd_register_uri_handler(server, &common_get_uri));
   } else {
     ESP_LOGI(__FILE__, "Error starting server! %s", esp_err_to_name(ret));
-    return NULL;
+    return ret;
   }
-}
-
-static esp_err_t stop_webserver(httpd_handle_t server) {
-  // Stop the httpd server
-  session_destroy();
-  return httpd_stop(server);
+  return ESP_OK;
 }
 
 void connect_handler(void *arg, esp_event_base_t event_base,
@@ -59,7 +55,7 @@ void connect_handler(void *arg, esp_event_base_t event_base,
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
   if (server == NULL) {
     ESP_LOGI(__FILE__, "Starting webserver");
-    server = start_webserver();
+    ESP_ERROR_CHECK(start_webserver());
   }
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 }
@@ -72,12 +68,13 @@ void disconnect_handler(void *arg, esp_event_base_t event_base,
 
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
   if (server != NULL && !client_count) {
+    session_destroy();
     ESP_LOGI(__FILE__, "Stopping webserver");
-    if (stop_webserver(*server) == ESP_OK) {
+
+    if (httpd_stop(server) == ESP_OK)
       server = NULL;
-    } else {
+    else
       ESP_LOGE(__FILE__, "Failed to stop http server");
-    }
   }
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 }

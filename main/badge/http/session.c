@@ -19,6 +19,7 @@ const char *get_session_key() {
 void session_destroy() {
   ESP_LOGI(__FILE__, "Destroy Context function called");
   session_key[0] = '\0';
+  ESP_LOGI(__FILE__, "Session destroyed");
 }
 
 esp_err_t session_init(httpd_req_t *req) {

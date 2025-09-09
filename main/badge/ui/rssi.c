@@ -1,4 +1,5 @@
 #include "rssi.h"
+#include "../bt.h"
 
 static lv_obj_t *table_rssi;
 lv_timer_t *rssi_timer_handle;

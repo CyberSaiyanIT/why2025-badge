@@ -6,6 +6,7 @@
 #include "socialenergy.h"
 #include "admin.h"
 #include "snake.h"
+#include "../led.h"
 
 
 const int nb_screens                     = NUM_SCREENS;

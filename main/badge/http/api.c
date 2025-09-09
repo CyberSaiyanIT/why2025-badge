@@ -3,10 +3,14 @@
 #include "esp_log.h"
 #include "esp_chip_info.h"
 #include "esp_http_server.h"
+#include "esp_timer.h"
 #include "cJSON.h"
 #include "session.h"
 
+#include "httpd.h"
+#include "../bt.h"
 #include "../ui/person.h"
+#include "../schedule.h"
 
 #define is_string_match(a, c) (!strncmp(a, c, sizeof(c)))
 
@@ -409,8 +413,9 @@ static esp_err_t reset_handler(httpd_req_t *req, const char *client_data) {
 esp_err_t post_handler(httpd_req_t *req) {
   int total_len = req->content_len;
   int cur_len   = 0;
-  char *buf     = ((rest_server_context_t *)(req->user_ctx))->scratch;
-  int received  = 0;
+  char buf[SCRATCH_BUFSIZE];
+  int received = 0;
+
   if (total_len >= SCRATCH_BUFSIZE) {
     /* Respond with 500 Internal Server Error */
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "content too long");

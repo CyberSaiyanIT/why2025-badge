@@ -11,17 +11,9 @@
 #include "freertos/semphr.h"
 #include "common/storage.h"
 
-#include "led.h"
-#include "bt.h"
-#include "wifi.h"
-#include "http/httpd.h"
-#include "sync.h"
-#include "ui/ui.h"
 
 #define SETTINGS_FILE     "/data/settings.json"
 #define DEFAULT_FILE      "/data/default.json"
-#define SCHEDULE_FILE     "/data/schedule.json"
-#define TMP_SCHEDULE_FILE "/data/schedule.json.tmp"
 
 #define NAME_BUF_SIZE       32
 #define BADGE_BUF_SIZE      64
@@ -98,24 +90,10 @@ typedef struct {
   bool active;
 } ble_node_t;
 
-enum enum_badge_event {
-  EVENT_HOTSPOT_START,
-  EVENT_HOTSPOT_STOP,
-  EVENT_STA_START,
-  EVENT_STA_STOP,
-  EVENT_SYNC_START,
-  EVENT_SYNC_STOP
-};
 
-extern QueueHandle_t wifi_queue;
-extern ble_node_t ble_nodes[MAX_NEARBY_NODE];
 extern badge_obj_t badge_obj;
 
 void badge_init();
 char* load_file_content(const char* filename);
-char* load_schedule_from_file();
-
-uint8_t count_ble_nodes();
-bool check_ble_set();
 
 #endif  // _DRAGON_H

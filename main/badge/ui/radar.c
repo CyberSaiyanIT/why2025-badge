@@ -1,5 +1,6 @@
 #include "radar.h"
 #include "lcd.h"
+#include "../bt.h"
 static lv_obj_t *radar_node[MAX_NEARBY_NODE]        = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
 

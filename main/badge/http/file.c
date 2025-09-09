@@ -23,6 +23,7 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
       {".js", "application/javascript"},
       {".css", "text/css"},
       {".png", "image/png"},
+      {".gif", "image/gif"},
       {".ico", "image/x-icon"},
       {".svg", "image/svg+xml"},
       {NULL, NULL},
@@ -45,8 +46,8 @@ esp_err_t get_handler(httpd_req_t *req) {
   else
     strlcat(filepath, req->uri, sizeof(filepath));
 
-  FILE *fd = fopen(filepath, "r");
-  if (fd == NULL) {
+  int fd = open(filepath, O_RDONLY);
+  if (fd < 0 ) {
     ESP_LOGE(__FILE__, "Failed to open file : %s", filepath);
     /* Respond with 500 Internal Server Error */
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed to read existing file");
@@ -61,13 +62,15 @@ esp_err_t get_handler(httpd_req_t *req) {
 
   do {
     /* Read file in chunks into the scratch buffer */
-    read_bytes = fread(chunk, SCRATCH_BUFSIZE, 1, fd);
+    read_bytes = read(fd, chunk, SCRATCH_BUFSIZE);
 
     if (read_bytes > 0) {
       /* Send the buffer contents as HTTP response chunk */
-      ESP_LOGI(__FILE__, "Chunk: \n%s", chunk);
-      if (httpd_resp_send_chunk(req, chunk, read_bytes) != ESP_OK) {
-        fclose(fd);
+      ESP_LOGI(__FILE__, "Chunk sending %d bytes", read_bytes);
+      if (httpd_resp_send_chunk(req, chunk, read_bytes) == ESP_OK)
+        ESP_LOGI(__FILE__, "Chunk sent");
+      else {
+        close(fd);
         ESP_LOGE(__FILE__, "File sending failed!");
         /* Abort sending file */
         httpd_resp_sendstr_chunk(req, NULL);
@@ -81,11 +84,9 @@ esp_err_t get_handler(httpd_req_t *req) {
   } while (read_bytes != 0);
 
   /* Close file after sending complete */
-  fclose(fd);
-  ESP_LOGI(__FILE__, "File sending complete");
+  close(fd);
   /* Respond with an empty chunk to signal HTTP response completion */
-  httpd_resp_set_hdr(req, "Connection", "close");
-  httpd_resp_send_chunk(req, NULL, 0);
+  ESP_ERROR_CHECK(httpd_resp_send_chunk(req, NULL, 0));
+  ESP_LOGI(__FILE__, "File sending complete");
   return ESP_OK;
 }
- 

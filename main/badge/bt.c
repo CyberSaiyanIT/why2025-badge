@@ -1,19 +1,34 @@
 #include "bt.h"
 
-typedef struct {
-    char scan_local_name[32];
-    uint8_t name_len;
-} ble_scan_local_name_t;
+ble_node_t ble_nodes[MAX_NEARBY_NODE];
 
-typedef struct {
-    uint8_t *q_data;
-    uint16_t q_data_len;
-} host_rcv_data_t;
 
 static uint8_t hci_cmd_buf[128];
 
 static uint16_t scanned_count = 0;
 static QueueHandle_t adv_queue;
+
+
+uint8_t count_ble_nodes() {
+  uint8_t cnt = 0;
+  for (int i = 0; i < MAX_NEARBY_NODE; i++) {
+    if (ble_nodes[i].active) cnt++;
+  }
+  return cnt;
+}
+
+bool check_ble_set() {
+  uint8_t set_bits = 0;
+  set_bits |= 1 << (badge_obj.device_id - 1);
+
+  for (int i = 0; i < MAX_NEARBY_NODE; i++) {
+    if (ble_nodes[i].active) {
+      set_bits |= 1 << (ble_nodes[i].id - 1);
+    }
+  }
+  return set_bits == 0x7F;
+}
+
 
 static void init_ble_nodes() {
     for(int i=0; i<MAX_NEARBY_NODE; i++) {
@@ -296,7 +311,7 @@ void bt_init()
     }
 
     /* A queue for storing received HCI packets. */
-    adv_queue = xQueueCreate(64, sizeof(host_rcv_data_t));
+    adv_queue = xQueueCreate(32, sizeof(host_rcv_data_t));
     if (adv_queue == NULL) {
         ESP_LOGE(__FILE__, "Queue creation failed\n");
         return;

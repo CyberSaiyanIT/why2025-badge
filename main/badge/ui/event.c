@@ -1,8 +1,8 @@
 #include "event.h"
 #include "cJSON.h"
+#include "../schedule.h"
 
 static lv_obj_t *table_event;
-
 
 void ui_event_load() {
   const char *buf = load_schedule_from_file();
@@ -24,10 +24,10 @@ void ui_event_load() {
     cJSON *item = cJSON_GetArrayItem(schedule_array, i);
 
     // cJSON *index = cJSON_GetObjectItem(item, "index");
-    cJSON *title = cJSON_GetObjectItem(item, "title");
-    cJSON *day = cJSON_GetObjectItem(item, "day");
-    cJSON *hour = cJSON_GetObjectItem(item, "hour");
-    cJSON *speaker = cJSON_GetObjectItem(item, "speaker");
+    cJSON *title    = cJSON_GetObjectItem(item, "title");
+    cJSON *day      = cJSON_GetObjectItem(item, "day");
+    cJSON *hour     = cJSON_GetObjectItem(item, "hour");
+    cJSON *speaker  = cJSON_GetObjectItem(item, "speaker");
     cJSON *location = cJSON_GetObjectItem(item, "location");
     cJSON *duration = cJSON_GetObjectItem(item, "duration");
 

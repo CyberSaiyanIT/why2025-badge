@@ -1,14 +1,13 @@
 #include "led.h"
+#include "common/i2c.h"
 #include "color.h"
 #include "hsv.h"
-#include "common/i2c.h"
-
+#include "bt.h"
 
 static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3};  // 0: center, 6: top
 static led_strip_handle_t strip;
 static bool easter_egg_active =
     false;  // Flag to block LED flashing during easter eggs
-
 
 void led_init() {
   // setup aw9523b led drivers.

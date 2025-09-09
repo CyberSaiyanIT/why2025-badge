@@ -1,5 +1,15 @@
 #include "wifi.h"
-#include "ui/admin.h"
+#include "../badge.h"
+#include "../ui/admin.h"
+#include "../badge.h"
+#include "../schedule.h"
+
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_timer.h"
 
 static const char* TAG       = "WIFI";
 static wifi_mode_t curr_mode = WIFI_MODE_NULL;
@@ -12,7 +22,6 @@ const int FAIL_BIT      = BIT1;
 static int retry_num      = 0;
 static int ap_clients_num = 0;
 static esp_timer_handle_t inactivity_timer;
-
 
 static void sta_disconnect_event(void* arg, esp_event_base_t event_base,
                                  int32_t event_id, void* event_data) {
@@ -83,7 +92,7 @@ void wifi_init(void) {
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
   ESP_ERROR_CHECK(esp_wifi_start());
 
-  curr_mode = WIFI_MODE_NULL;
+  curr_mode   = WIFI_MODE_NULL;
   initialized = true;
 }
 
@@ -91,7 +100,7 @@ static void inactivity_timer_callback(void* arg) {
   if (!ap_clients_num) {
     ESP_LOGI(__FILE__, "Inactivity detected");
     stop_wifi();
-  } else 
+  } else
     ESP_LOGE(__FILE__, "Timer should not be running...");
 }
 
@@ -180,40 +189,38 @@ void wifi_task(void* arg) {
   uint32_t wifi_event;
 
   while (1) {
-    if (!xQueueReceive(wifi_queue, &wifi_event, portMAX_DELAY))
-      continue;
-
-    switch (wifi_event) {
-      case EVENT_HOTSPOT_START:
-        ESP_LOGI(__FILE__, "EVENT_HOTSPOT_START received");
-        stop_wifi();
-        start_wifi_ap();
-        esp_timer_start_once(inactivity_timer, AP_INACTIVITY_TIMEOUT_S * 10000000);
-        break;
-      case EVENT_STA_START:
-        ESP_LOGI(__FILE__, "EVENT_STA_START received");
-        stop_wifi();
-        start_wifi_sta();
-        retry_num = 0;
-        break;
-      case EVENT_SYNC_START:
-        ESP_LOGI(__FILE__, "EVENT_SYNC_START received");
-        schedule_sync_handler(true);
-        break;
-      case EVENT_HOTSPOT_STOP:
-        ESP_LOGI(__FILE__, "EVENT_HOTSPOT_STOP received");
-        stop_wifi();
-        esp_timer_stop(inactivity_timer);
-        break;
-      case EVENT_STA_STOP:
-        ESP_LOGI(__FILE__, "EVENT_STA_STOP received");
-        stop_wifi();
-        esp_timer_stop(inactivity_timer);
-        break;
-      default:
-        ESP_LOGI(__FILE__, "not exists event 0x%04" PRIx32, wifi_event);
-        break;
-    }
+    if (xQueueReceive(wifi_queue, &wifi_event, portMAX_DELAY))
+      switch (wifi_event) {
+        case EVENT_HOTSPOT_START:
+          ESP_LOGI(__FILE__, "EVENT_HOTSPOT_START received");
+          stop_wifi();
+          start_wifi_ap();
+          esp_timer_start_once(inactivity_timer, AP_INACTIVITY_TIMEOUT_S * 10000000);
+          break;
+        case EVENT_STA_START:
+          ESP_LOGI(__FILE__, "EVENT_STA_START received");
+          stop_wifi();
+          start_wifi_sta();
+          retry_num = 0;
+          break;
+        case EVENT_SYNC_START:
+          ESP_LOGI(__FILE__, "EVENT_SYNC_START received");
+          schedule_sync_handler(true);
+          break;
+        case EVENT_HOTSPOT_STOP:
+          ESP_LOGI(__FILE__, "EVENT_HOTSPOT_STOP received");
+          stop_wifi();
+          esp_timer_stop(inactivity_timer);
+          break;
+        case EVENT_STA_STOP:
+          ESP_LOGI(__FILE__, "EVENT_STA_STOP received");
+          stop_wifi();
+          esp_timer_stop(inactivity_timer);
+          break;
+        default:
+          ESP_LOGI(__FILE__, "not exists event 0x%04" PRIx32, wifi_event);
+          break;
+      }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
