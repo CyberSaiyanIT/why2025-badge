@@ -9,7 +9,7 @@
 #include "freertos/queue.h"
 
 #include "common/bt_hci_common.h"
-
+#include "badge.h" 
 #include "esp_bt.h"
 #include "badge.h"
 
@@ -20,6 +20,14 @@
 #define BLE_ADV_MAX 5 * 0x640  // X seconds * 0x640
 
 #define NODE_QUEUE_TIMEOUT_MS 20000
+
+typedef struct {
+  char name[BADGE_NAME_MAX_SIZE];
+  uint8_t id;
+  short rssi;
+  uint32_t last_found;
+  bool active;
+} ble_node_t;
 
 extern ble_node_t ble_nodes[MAX_NEARBY_NODE];
 

@@ -1,15 +1,23 @@
 #include <stdio.h>
 #include <string.h>
-
+#include "esp_event.h"
 #include "badge/badge.h"
 #include "badge/common/i2c.h"
 #include "badge/http/httpd.h"
 #include "badge/wifi/wifi.h"
 #include "badge/ui/ui.h"
+#include "badge/common/storage.h"
 
 void app_main() {
   usleep(10 * 1000000UL);
   ESP_LOGI(__FILE__, "---------- MAIN START(1): free_heap_size = %lu\n", esp_get_free_heap_size());
+  // Init storage
+  nvs_init();
+  spiffs_init();
+
+  // Init event loop
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+
   badge_init();
   i2c_master_init();
   // led_init();

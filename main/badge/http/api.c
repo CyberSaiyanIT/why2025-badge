@@ -227,11 +227,11 @@ static esp_err_t person_handler(httpd_req_t *req, const char *client_data) {
       ui_set_person(false);
     }
     cJSON *person_obj = cJSON_CreateObject();
-    cJSON_AddStringToObject(person_obj, "name", badge_obj.person_name);
-    cJSON_AddStringToObject(person_obj, "organization", badge_obj.person_organization);
-    cJSON_AddStringToObject(person_obj, "job", badge_obj.person_job);
-    cJSON_AddStringToObject(person_obj, "message", badge_obj.person_message);
-    cJSON_AddStringToObject(person_obj, "url", badge_obj.person_url);
+    cJSON_AddStringToObject(person_obj, "name", badge_obj.person.name);
+    cJSON_AddStringToObject(person_obj, "organization", badge_obj.person.organization);
+    cJSON_AddStringToObject(person_obj, "job", badge_obj.person.job);
+    cJSON_AddStringToObject(person_obj, "message", badge_obj.person.message);
+    cJSON_AddStringToObject(person_obj, "url", badge_obj.person.url);
     cJSON_AddItemToObject(response, "person", person_obj);
 
     char *response_str = cJSON_PrintUnformatted(response);
@@ -280,11 +280,11 @@ static esp_err_t secret_handler(httpd_req_t *req, const char *client_data) {
       ui_set_person(true);
     }
     cJSON *secret_obj = cJSON_CreateObject();
-    cJSON_AddStringToObject(secret_obj, "name", badge_obj.secret_name);
-    cJSON_AddStringToObject(secret_obj, "organization", badge_obj.secret_organization);
-    cJSON_AddStringToObject(secret_obj, "job", badge_obj.secret_job);
-    cJSON_AddStringToObject(secret_obj, "message", badge_obj.secret_message);
-    cJSON_AddStringToObject(secret_obj, "url", badge_obj.secret_url);
+    cJSON_AddStringToObject(secret_obj, "name", badge_obj.secret.name);
+    cJSON_AddStringToObject(secret_obj, "organization", badge_obj.secret.organization);
+    cJSON_AddStringToObject(secret_obj, "job", badge_obj.secret.job);
+    cJSON_AddStringToObject(secret_obj, "message", badge_obj.secret.message);
+    cJSON_AddStringToObject(secret_obj, "url", badge_obj.secret.url);
     cJSON_AddItemToObject(response, "secret", secret_obj);
 
     char *response_str = cJSON_PrintUnformatted(response);

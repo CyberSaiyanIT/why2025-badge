@@ -54,6 +54,7 @@
         "esp_log.h": "c",
         "esp_chip_info.h": "c",
         "session.h": "c",
-        "esp_http_server.h": "c"
+        "esp_http_server.h": "c",
+        "esp_mac.h": "c"
     }
 }

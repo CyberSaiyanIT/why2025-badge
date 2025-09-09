@@ -11,17 +11,17 @@ static lv_obj_t *qr;
 void ui_set_person(bool secret) {
   current_secret = secret;
   if (secret == true) {
-    lv_label_set_text(person_name, badge_obj.secret_name);
-    lv_label_set_text(person_organization, badge_obj.secret_organization);
-    lv_label_set_text(person_job, badge_obj.secret_job);
-    lv_label_set_text(person_message, badge_obj.secret_message);
-    lv_qrcode_update(qr, badge_obj.secret_url, strlen(badge_obj.secret_url));
+    lv_label_set_text(person_name, badge_obj.secret.name);
+    lv_label_set_text(person_organization, badge_obj.secret.organization);
+    lv_label_set_text(person_job, badge_obj.secret.job);
+    lv_label_set_text(person_message, badge_obj.secret.message);
+    lv_qrcode_update(qr, badge_obj.secret.url, strlen(badge_obj.secret.url));
   } else {
-    lv_label_set_text(person_name, badge_obj.person_name);
-    lv_label_set_text(person_organization, badge_obj.person_organization);
-    lv_label_set_text(person_job, badge_obj.person_job);
-    lv_label_set_text(person_message, badge_obj.person_message);
-    lv_qrcode_update(qr, badge_obj.person_url, strlen(badge_obj.person_url));
+    lv_label_set_text(person_name, badge_obj.person.name);
+    lv_label_set_text(person_organization, badge_obj.person.organization);
+    lv_label_set_text(person_job, badge_obj.person.job);
+    lv_label_set_text(person_message, badge_obj.person.message);
+    lv_qrcode_update(qr, badge_obj.person.url, strlen(badge_obj.person.url));
   }
 }
 

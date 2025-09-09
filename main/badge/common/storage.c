@@ -7,26 +7,27 @@ static const esp_vfs_spiffs_conf_t conf = {
     .max_files              = 20,
     .format_if_mount_failed = false};
 
-void nvs_init() {
+esp_err_t nvs_init() {
   ESP_LOGI(__FILE__, "NVS Initialization");
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
     ESP_ERROR_CHECK(nvs_flash_erase());
     ret = nvs_flash_init();
   }
-  ESP_ERROR_CHECK(ret);
+  return ret;
 }
 
-void spiffs_size() {
+esp_err_t spiffs_size() {
   size_t total = 0, used = 0;
   esp_err_t ret = esp_spiffs_info(conf.partition_label, &total, &used);
   if (ret == ESP_OK)
     ESP_LOGI(__FILE__, "Partition size: total: %d, used: %d", total, used);
   else
     ESP_LOGE(__FILE__, "Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
+  return ret;
 }
 
-void spiffs_init() {
+esp_err_t spiffs_init() {
   ESP_LOGI(__FILE__, "SPIFFS Initialization");
 
   // Use settings defined above to initialize and mount SPIFFS filesystem.
@@ -41,7 +42,7 @@ void spiffs_init() {
     } else {
       ESP_LOGE(__FILE__, "Failed to initialize SPIFFS (%s)", esp_err_to_name(ret));
     }
-    return;
+    return ret;
   }
-  spiffs_size();
+  return spiffs_size();
 }
