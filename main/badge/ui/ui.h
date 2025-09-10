@@ -18,7 +18,7 @@ enum screen_order {
   NUM_SCREENS
 };
 
-#define NAME_LABEL_SIZE 250
+#define NAME_LABEL_SIZE 300
 #define SCROLL_UP 80
 #define SCROLL_DOWN -80
 

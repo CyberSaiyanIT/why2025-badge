@@ -57,6 +57,8 @@
         "esp_http_server.h": "c",
         "esp_mac.h": "c",
         "event_groups.h": "c",
-        "esp_system.h": "c"
+        "esp_system.h": "c",
+        "storage.h": "c",
+        "esp_err.h": "c"
     }
 }

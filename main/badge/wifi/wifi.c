@@ -60,12 +60,8 @@ void wifi_task(void* arg) {
           ESP_LOGI(__FILE__, "EVENT_STA_START received");
           stop_wifi();
           if (start_wifi_sta())
-            schedule_sync_handler(true);
+            schedule_sync_handler();
           stop_wifi();
-          break;
-        case EVENT_SYNC:
-          ESP_LOGI(__FILE__, "EVENT_SYNC_START received");
-          schedule_sync_handler(true);
           break;
         case EVENT_STOP:
           ESP_LOGI(__FILE__, "EVENT_STOP received");
@@ -82,7 +78,6 @@ void wifi_task(void* arg) {
 static void send_wifi_event(int event) { xQueueSend(wifi_queue, &event, portMAX_DELAY); }
 void start_ap() { send_wifi_event(EVENT_AP_START); }
 void start_sta() { send_wifi_event(EVENT_STA_START); }
-void start_sync() { send_wifi_event(EVENT_SYNC); }
 void stop_all() { send_wifi_event(EVENT_STOP); }
 
 void wifi_init(void) {

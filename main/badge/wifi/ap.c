@@ -22,7 +22,7 @@ static void inactivity_timer_callback(void* arg) {
     ESP_LOGE(__FILE__, "Timer should not be running...");
 }
 
-static inline void start_inactivity_timer() { esp_timer_start_once(inactivity_timer, AP_INACTIVITY_TIMEOUT_S * 1000000); }
+static inline void start_inactivity_timer() { esp_timer_start_once(inactivity_timer, AP_INACTIVITY_TIMEOUT_S * 10000000); }
 
 static void ap_staconnected_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*)event_data;

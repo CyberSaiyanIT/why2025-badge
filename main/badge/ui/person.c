@@ -33,6 +33,15 @@ static void ui_screen_qrcode_event(lv_event_t *event) {
     lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);
 }
 
+static lv_obj_t *ui_person_create_label(lv_obj_t *screen) {
+  lv_obj_t *label = lv_label_create(screen);
+  lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);           /*Break the long lines*/
+  lv_label_set_recolor(label, true);                           /*Enable re-coloring by commands in the text*/
+  lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0); /*Center aligned lines*/
+  lv_obj_set_width(label, NAME_LABEL_SIZE);
+  return label;
+}
+
 lv_obj_t *ui_screen_person_init() {
   /* Styling */
   static lv_style_t style_name;
@@ -48,23 +57,16 @@ lv_obj_t *ui_screen_person_init() {
   lv_obj_t *screen_person = lv_obj_create(NULL);
   lv_obj_clear_flag(screen_person, LV_OBJ_FLAG_SCROLLABLE);
 
-  person_name = lv_label_create(screen_person); /*Used as a base label*/
-  lv_label_set_long_mode(person_name,
-                         LV_LABEL_LONG_WRAP); /*Break the long lines*/
-  lv_label_set_recolor(person_name,
-                       true); /*Enable re-coloring by commands in the text*/
-  lv_obj_set_style_text_align(person_name, LV_TEXT_ALIGN_CENTER,
-                              0); /*Center aligned lines*/
-  lv_obj_set_width(person_name, NAME_LABEL_SIZE);
+  person_name = ui_person_create_label(screen_person); /*Used as a base label*/
   lv_obj_align(person_name, LV_ALIGN_CENTER, 0, -60);
 
-  person_organization = lv_label_create(screen_person);
+  person_organization = ui_person_create_label(screen_person);
   lv_obj_align(person_organization, LV_ALIGN_CENTER, 0, -30);
 
-  person_job = lv_label_create(screen_person);
+  person_job = ui_person_create_label(screen_person);
   lv_obj_align(person_job, LV_ALIGN_CENTER, 0, 0);
 
-  person_message = lv_label_create(screen_person);
+  person_message = ui_person_create_label(screen_person);
   lv_obj_align(person_message, LV_ALIGN_CENTER, 0, 60);
 
   qr = lv_qrcode_create(screen_person);

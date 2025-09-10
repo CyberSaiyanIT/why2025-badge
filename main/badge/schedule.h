@@ -16,6 +16,6 @@
 
 
 char *load_schedule_from_file();
-void schedule_sync_handler(bool force);
+void schedule_sync_handler();
 
 #endif // _SCHEDULE_H

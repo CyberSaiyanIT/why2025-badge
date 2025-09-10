@@ -21,7 +21,6 @@ static void sta_got_ip_event(void* arg, esp_event_base_t event_base, int32_t eve
   retry_num = 0;
   xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
   ui_sta_connected_handler();
-  ui_sta_disconnected_handler();
 }
 
 static void sta_disconnect_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
@@ -33,6 +32,7 @@ static void sta_disconnect_event(void* arg, esp_event_base_t event_base, int32_t
     xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
   } else
     xEventGroupSetBits(wifi_event_group, FAIL_BIT);
+  ui_sta_disconnected_handler();
 }
 
 static void sta_stop_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {

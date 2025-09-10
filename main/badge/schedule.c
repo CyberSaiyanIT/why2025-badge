@@ -11,7 +11,7 @@
 
 static int64_t last_run    = 0;
 static int64_t current_run = 0;
-static bool errors, forced, connected = false;
+static bool errors, connected = false;
 
 char *load_schedule_from_file() {
   FILE *fp = fopen(SCHEDULE_FILE, "r");
@@ -117,7 +117,6 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt) {
 
       output_len = 0;
       connected  = false;
-      ui_clear_sync();
 
       if (errors) {
         errors = false;
@@ -132,9 +131,8 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt) {
   return ESP_OK;
 }
 
-void schedule_sync_handler(bool force) {
+void schedule_sync_handler() {
   current_run = esp_timer_get_time();
-  forced      = force;
   ESP_LOGI(__FILE__, "Previous time: %lld", last_run);
   ESP_LOGI(__FILE__, "Current time: %lld", current_run);
 
@@ -149,7 +147,7 @@ void schedule_sync_handler(bool force) {
     return;
   }
 
-  if (!connected && (forced || last_run == 0 || (current_run - last_run) > 1000 * SYNC_PERIOD_MS)) {
+  if (!connected && (last_run == 0 || (current_run - last_run) > 1000 * SYNC_PERIOD_MS)) {
     const char *SYNC_PATH = badge_obj.sync_path;
     ESP_LOGI(__FILE__, "Connecting to https://cybersaiyan.it/%s", SYNC_PATH);
 
