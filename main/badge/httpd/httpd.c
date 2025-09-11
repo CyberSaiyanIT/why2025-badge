@@ -12,7 +12,7 @@
 static uint8_t client_count;
 httpd_handle_t httpd_server = NULL;
 
-static esp_err_t start_webserver(void) {
+static esp_err_t httpd_start_webserver(void) {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.uri_match_fn   = httpd_uri_match_wildcard;
 
@@ -29,7 +29,7 @@ static esp_err_t start_webserver(void) {
     httpd_uri_t common_post_uri = {
         .uri      = API_ENDPOINT_WILDCARD,
         .method   = HTTP_POST,
-        .handler  = post_handler,
+        .handler  = httpd_api_handler,
         .user_ctx = NULL};
     ESP_ERROR_CHECK(httpd_register_uri_handler(httpd_server, &common_post_uri));
 
@@ -37,7 +37,7 @@ static esp_err_t start_webserver(void) {
     httpd_uri_t common_get_uri = {
         .uri      = "/*",
         .method   = HTTP_GET,
-        .handler  = get_handler,
+        .handler  = httpd_file_handler,
         .user_ctx = NULL};
     ESP_ERROR_CHECK(httpd_register_uri_handler(httpd_server, &common_get_uri));
   } else {
@@ -47,19 +47,19 @@ static esp_err_t start_webserver(void) {
   return ESP_OK;
 }
 
-static void httpd_connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+static void httpd_connect_event(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   client_count++;
   ESP_LOGI(__FILE__, "Number of clients: %d", client_count);
 
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
   if (httpd_server == NULL) {
     ESP_LOGI(__FILE__, "Starting webserver");
-    ESP_ERROR_CHECK(start_webserver());
+    ESP_ERROR_CHECK(httpd_start_webserver());
   }
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 }
 
-static void httpd_disconnect_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+static void httpd_disconnect_event(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
   if (client_count > 0)
     client_count--;
   ESP_LOGI(__FILE__, "Number of clients: %d", client_count);
@@ -80,6 +80,6 @@ static void httpd_disconnect_handler(void *arg, esp_event_base_t event_base, int
 void httpd_init() {
   httpd_server = NULL;
 
-  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &httpd_connect_handler, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &httpd_disconnect_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &httpd_connect_event, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &httpd_disconnect_event, NULL));
 }

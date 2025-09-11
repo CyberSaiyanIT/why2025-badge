@@ -8,7 +8,7 @@ static lv_obj_t *person_job;
 static lv_obj_t *person_message;
 static lv_obj_t *qr;
 
-void ui_set_person(bool secret) {
+void ui_person_set_secret(bool secret) {
   current_secret   = secret;
   person_t *person = &badge_obj.person;
   if (secret == true)
@@ -21,12 +21,12 @@ void ui_set_person(bool secret) {
   lv_qrcode_update(qr, person->url, strlen(person->url));
 }
 
-static void ui_screen_person_event(lv_event_t *event) {
+static void ui_person_toggle_secret_event(lv_event_t *event) {
   lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);
-  ui_set_person(!current_secret);
+  ui_person_set_secret(!current_secret);
 }
 
-static void ui_screen_qrcode_event(lv_event_t *event) {
+static void ui_person_qrcode_event(lv_event_t *event) {
   if (lv_obj_has_flag(qr, LV_OBJ_FLAG_HIDDEN))
     lv_obj_remove_flag(qr, LV_OBJ_FLAG_HIDDEN);
   else
@@ -42,7 +42,7 @@ static lv_obj_t *ui_person_create_label(lv_obj_t *screen) {
   return label;
 }
 
-lv_obj_t *ui_screen_person_init() {
+lv_obj_t *ui_person_init() {
   /* Styling */
   static lv_style_t style_name;
   lv_style_init(&style_name);
@@ -79,14 +79,17 @@ lv_obj_t *ui_screen_person_init() {
   lv_obj_add_style(person_organization, &style_organization_job, LV_PART_MAIN);
   lv_obj_add_style(person_job, &style_organization_job, LV_PART_MAIN);
 
-  ui_set_person(false);
+  ui_person_set_secret(false);
   /* events */
   lv_obj_add_flag(screen_person, LV_OBJ_FLAG_CLICKABLE);
-  lv_obj_add_event_cb(screen_person, ui_screen_person_event, LV_EVENT_LONG_PRESSED, NULL);
-  lv_obj_add_event_cb(screen_person, ui_screen_qrcode_event, LV_EVENT_DOUBLE_CLICKED, NULL);
+  lv_obj_add_event_cb(screen_person, ui_person_toggle_secret_event, LV_EVENT_LONG_PRESSED, NULL);
+  lv_obj_add_event_cb(screen_person, ui_person_qrcode_event, LV_EVENT_DOUBLE_CLICKED, NULL);
   return (screen_person);
 }
 
-void person_button_up() { ui_set_person(true); }
-
-void person_button_down() { ui_set_person(false); }
+void ui_person_load() {
+  lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);
+  ui_person_set_secret(false);
+}
+void ui_person_button_up() { ui_person_set_secret(true); }
+void ui_person_button_down() { ui_person_set_secret(false); }

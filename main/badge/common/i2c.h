@@ -15,9 +15,8 @@
 extern i2c_master_dev_handle_t AW9523B_handle;
 extern i2c_master_dev_handle_t TSC2007_handle;
 
-esp_err_t i2c_register_write(i2c_master_dev_handle_t dev_handle, uint8_t reg_addr, uint8_t data);
-esp_err_t i2c_register_write_read(i2c_master_dev_handle_t dev_handle, uint8_t reg_addr, uint8_t *data, size_t len);
-void new_i2c_device(uint16_t device_address, i2c_master_dev_handle_t *dev_handle);
+esp_err_t i2c_write_register(i2c_master_dev_handle_t dev_handle, uint8_t reg_addr, uint8_t data);
+esp_err_t i2c_write_read_register(i2c_master_dev_handle_t dev_handle, uint8_t reg_addr, uint8_t *data, size_t len);
 void i2c_master_init();
 
 #endif

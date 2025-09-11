@@ -6,8 +6,8 @@
 #define STA_TIMEOUT_MS    20000
 #define STA_MAXIMUM_RETRY 5
 
-bool start_wifi_sta();
-void stop_wifi_sta();
+bool wifi_sta_start();
+void wifi_sta_stop();
 void wifi_sta_init();
 
 #endif

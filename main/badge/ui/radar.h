@@ -4,9 +4,8 @@
 #include <lvgl.h>
 #include "../badge.h"
 
-extern lv_timer_t *radar_timer_handle;
-extern lv_obj_t *screen_radar;
-
-lv_obj_t *ui_screen_radar_init();
+lv_obj_t *ui_radar_init();
+void ui_radar_load();
+void ui_radar_unload();
 
 #endif

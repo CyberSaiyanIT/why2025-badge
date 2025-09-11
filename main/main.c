@@ -3,7 +3,7 @@
 #include "esp_event.h"
 #include "badge/badge.h"
 #include "badge/common/i2c.h"
-#include "badge/http/httpd.h"
+#include "badge/httpd/httpd.h"
 #include "badge/wifi/wifi.h"
 #include "badge/ui/ui.h"
 #include "badge/common/storage.h"

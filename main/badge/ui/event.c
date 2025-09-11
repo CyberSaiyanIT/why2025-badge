@@ -6,8 +6,8 @@
 
 static lv_obj_t *table_event;
 
-void ui_event_load() {
-  const char *buf = load_schedule_from_file();
+void ui_event_load_schedule() {
+  const char *buf = schedule_load_from_file();
   if (buf == NULL) {
     ESP_LOGI(__FILE__, "Failed to load schedule from file");
     return;
@@ -61,7 +61,7 @@ void ui_event_load() {
   cJSON_Delete(schedule_json);
 }
 
-lv_obj_t *ui_screen_event_init() {
+lv_obj_t *ui_event_init() {
   // page for event
   static lv_style_t style;
   lv_style_init(&style);
@@ -76,7 +76,7 @@ lv_obj_t *ui_screen_event_init() {
   lv_obj_add_style(table_event, &style, LV_PART_MAIN);
 
   lv_obj_set_align(table_event, LV_ALIGN_TOP_MID);
-  ui_event_load();
+  ui_event_load_schedule();
 
   lv_obj_set_width(table_event, lv_pct(100));
 
@@ -86,5 +86,5 @@ lv_obj_t *ui_screen_event_init() {
   return (screen_event);
 }
 
-void event_button_up() {}
-void event_button_down() {}
+void ui_event_button_up() {}
+void ui_event_button_down() {}

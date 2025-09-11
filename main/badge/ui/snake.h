@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ui.h"
+#include <lvgl.h>
 
 #define UI_SNAKE_MAX_BODY 64
 #define UI_SNAKE_BODY_SIZE 20
@@ -32,15 +32,7 @@ typedef struct
     int speed;
 } snake_t;
 
-extern lv_timer_t* snake_timer_handle;
-extern lv_obj_t *screen_snake; 
-
 lv_obj_t *ui_screen_snake_init();
-    
-void snake_set_dir(int8_t dir);
-void snake_reset(lv_obj_t *parent);
-void snake_timer(lv_timer_t *arg);
-
-void snake_button_up();
-void snake_button_down();
+void ui_snake_button_up();
+void ui_snake_button_down();
 #endif

@@ -13,7 +13,7 @@
 
 QueueHandle_t wifi_queue;
 
-void stop_wifi() {
+static void wifi_stop() {
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 
   ESP_LOGI(__FILE__, "Stopping wifi");
@@ -28,11 +28,11 @@ void stop_wifi() {
       break;
     case WIFI_MODE_STA:
       ESP_LOGI(__FILE__, "Wifi is in STA mode");
-      stop_wifi_sta();
+      wifi_sta_stop();
       break;
     case WIFI_MODE_AP:
       ESP_LOGI(__FILE__, "Wifi is in AP mode");
-      stop_wifi_ap();
+      wifi_ap_stop();
       break;
     default:
       ESP_LOGE(__FILE__, "Wifi is in Unkown mode");
@@ -53,19 +53,19 @@ void wifi_task(void* arg) {
       switch (wifi_event) {
         case EVENT_AP_START:
           ESP_LOGI(__FILE__, "EVENT_HOTSPOT_START received");
-          stop_wifi();
-          start_wifi_ap();
+          wifi_stop();
+          wifi_ap_start();
           break;
         case EVENT_STA_START:
           ESP_LOGI(__FILE__, "EVENT_STA_START received");
-          stop_wifi();
-          if (start_wifi_sta())
+          wifi_stop();
+          if (wifi_sta_start())
             schedule_sync_handler();
-          stop_wifi();
+          wifi_stop();
           break;
         case EVENT_STOP:
           ESP_LOGI(__FILE__, "EVENT_STOP received");
-          stop_wifi();
+          wifi_stop();
           break;
         default:
           ESP_LOGI(__FILE__, "not exists event 0x%04" PRIx32, wifi_event);
@@ -75,10 +75,10 @@ void wifi_task(void* arg) {
   }
 }
 
-static void send_wifi_event(int event) { xQueueSend(wifi_queue, &event, portMAX_DELAY); }
-void start_ap() { send_wifi_event(EVENT_AP_START); }
-void start_sta() { send_wifi_event(EVENT_STA_START); }
-void stop_all() { send_wifi_event(EVENT_STOP); }
+static void wifi_send_event(int event) { xQueueSend(wifi_queue, &event, portMAX_DELAY); }
+void wifi_start_ap() { wifi_send_event(EVENT_AP_START); }
+void wifi_start_sta() { wifi_send_event(EVENT_STA_START); }
+void wifi_stop_all() { wifi_send_event(EVENT_STOP); }
 
 void wifi_init(void) {
   ESP_ERROR_CHECK(esp_netif_init());

@@ -3,8 +3,8 @@
 
 #include <lvgl.h>
 
-lv_obj_t *ui_screen_dice_init();
-void dice_button_up();
-void dice_button_down();
+lv_obj_t *ui_dice_init();
+void ui_dice_button_up();
+void ui_dice_button_down();
 
 #endif

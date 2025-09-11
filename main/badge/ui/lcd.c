@@ -18,49 +18,23 @@ static esp_lcd_panel_io_handle_t io_handle;
 
 uint8_t *buf1 = NULL;
 uint8_t *buf2 = NULL;
+
 /***** LCD INIT *****/
-
-
-#if LV_USE_LOG
-void log_to_serial(lv_log_level_t level, const char *buf) {
-  switch (level) {
-    case LV_LOG_LEVEL_TRACE:
-      ESP_LOGV("LVGL", "%s", buf);
-      break;
-    case LV_LOG_LEVEL_INFO:
-      ESP_LOGI("LVGL", "%s", buf);
-      break;
-    case LV_LOG_LEVEL_WARN:
-      ESP_LOGW("LVGL", "%s", buf);
-      break;
-    case LV_LOG_LEVEL_ERROR:
-      ESP_LOGE("LVGL", "%s", buf);
-      break;
-    case LV_LOG_LEVEL_USER:
-      ESP_LOGI("LVGL User", "%s", buf);
-      break;
-    case LV_LOG_LEVEL_NONE:
-      ESP_LOGI("LVGL None", "%s", buf);
-      break;
-  }
-}
-#endif
-
-static bool notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io,
-                                    esp_lcd_panel_io_event_data_t *edata,
-                                    void *user_ctx) {
+static bool ui_lcd_notify_lvgl_flush_ready_cb(esp_lcd_panel_io_handle_t panel_io,
+                                              esp_lcd_panel_io_event_data_t *edata,
+                                              void *user_ctx) {
   lv_display_t *disp = (lv_display_t *)user_ctx;
   lv_display_flush_ready(disp);
   return false;
 }
 
-static void lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
-                          uint8_t *px_map) {
+static void ui_lcd_flush_cb(lv_display_t *disp, const lv_area_t *area,
+                            uint8_t *px_map) {
   int offsetx1 = area->x1;
   int offsetx2 = area->x2;
   int offsety1 = area->y1;
   int offsety2 = area->y2;
-  
+
   // because SPI LCD is big-endian, we need to swap the RGB bytes order
   lv_draw_sw_rgb565_swap(px_map,
                          (offsetx2 + 1 - offsetx1) * (offsety2 + 1 - offsety1));
@@ -70,7 +44,7 @@ static void lvgl_flush_cb(lv_display_t *disp, const lv_area_t *area,
       offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map));
 }
 
-void spi_init() {
+void ui_lcd_spi_init() {
   ESP_LOGI(__FILE__, "Initialize SPI bus");
   spi_bus_config_t buscfg = {
       .sclk_io_num     = PIN_NUM_SCLK,
@@ -83,7 +57,7 @@ void spi_init() {
   ESP_ERROR_CHECK(spi_bus_initialize(LCD_HOST, &buscfg, SPI_DMA_CH_AUTO));
 }
 
-void panel_init() {
+void ui_lcd_panel_init() {
   ESP_LOGI(__FILE__, "Initialize panel");
   esp_lcd_panel_io_spi_config_t io_config = {
       .dc_gpio_num       = PIN_NUM_LCD_DC,
@@ -117,15 +91,13 @@ void panel_init() {
   ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(panel_handle, true));
 }
 
-void lcd_init() {
-  spi_init();
-  panel_init();
+void ui_lcd_init() {
+  ui_lcd_spi_init();
+  ui_lcd_panel_init();
 
   ESP_LOGI(__FILE__, "LVGL Initialization");
   lv_init();
-#if LV_USE_LOG
-  lv_log_register_print_cb(log_to_serial);
-#endif
+
   // create a lvgl display
   ESP_LOGI(__FILE__, "Display Initialization");
   lv_display_t *display = lv_display_create(LCD_H_RES, LCD_V_RES);
@@ -141,13 +113,13 @@ void lcd_init() {
   // set the callback which can copy the rendered image to an area of the
   // display
   ESP_LOGI(__FILE__, "Setting flush callback");
-  lv_display_set_flush_cb(display, lvgl_flush_cb);
+  lv_display_set_flush_cb(display, ui_lcd_flush_cb);
 
   ESP_LOGI(
       __FILE__,
       "Register io panel event callback for LVGL flush ready notification");
   const esp_lcd_panel_io_callbacks_t cbs = {
-      .on_color_trans_done = notify_lvgl_flush_ready,
+      .on_color_trans_done = ui_lcd_notify_lvgl_flush_ready_cb,
   };
   /* Register done callback */
   ESP_ERROR_CHECK(

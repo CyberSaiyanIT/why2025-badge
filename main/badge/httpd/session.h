@@ -9,6 +9,6 @@
 const char *get_session_key();
 void session_destroy();
 esp_err_t session_init(httpd_req_t *req);
-bool check_session(httpd_req_t *req, const char *client_data);
+bool session_check(httpd_req_t *req, const char *client_data);
 
 #endif

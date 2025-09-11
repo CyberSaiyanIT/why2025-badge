@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string.h>
 #include <fcntl.h>
 #include "esp_system.h"
 #include "esp_log.h"
@@ -13,7 +12,7 @@
 #define CHECK_FILE_EXTENSION(filename, ext) (strcasecmp(&filename[strlen(filename) - strlen(ext)], ext) == 0)
 
 /* Set HTTP response content type according to file extension */
-static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepath) {
+static esp_err_t httpd_file_set_contenttype(httpd_req_t *req, const char *filepath) {
   struct
   {
     const char *extension;
@@ -36,7 +35,7 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req, const char *filepa
 }
 
 /* Send HTTP response with the contents of the requested file */
-esp_err_t get_handler(httpd_req_t *req) {
+esp_err_t httpd_file_handler(httpd_req_t *req) {
   char filepath[FILE_PATH_MAX];
 
   //&rest_context = (rest_server_context_t*)req->user_ctx;
@@ -55,7 +54,7 @@ esp_err_t get_handler(httpd_req_t *req) {
   }
 
   ESP_LOGI(__FILE__, "Sending file : %s", filepath);
-  set_content_type_from_file(req, filepath);
+  httpd_file_set_contenttype(req, filepath);
 
   char chunk[SCRATCH_BUFSIZE];
   ssize_t read_bytes;

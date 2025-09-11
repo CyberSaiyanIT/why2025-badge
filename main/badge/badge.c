@@ -1,20 +1,15 @@
+#include "badge.h"
 #include <stdio.h>
 #include <string.h>
+#include <fcntl.h>
 #include "cJSON.h"
 
-#include "badge.h"
-
-#include "led.h"
-#include "bt.h"
-#include "wifi/wifi.h"
-#include "http/httpd.h"
-#include "schedule.h"
-#include "ui/ui.h"
+#include "esp_random.h"
 #include "common/storage.h"
 
 badge_obj_t badge_obj;
 
-static cJSON *load_file(const char *filename) {
+static cJSON *badge_load_file(const char *filename) {
   struct stat file_stat;
 
   ESP_LOGI(__FILE__, "Loading settings from %s", filename);
@@ -44,7 +39,7 @@ static cJSON *load_file(const char *filename) {
   return json_content;
 }
 
-static esp_err_t copy_default_to_settings() {
+static esp_err_t badge_copy_default_to_settings() {
   FILE *default_file;
   FILE *settings_file;
   int c = 0;
@@ -92,7 +87,7 @@ static void json_set_str_value(cJSON *obj, const char *key, const char *value) {
   ESP_LOGI(__FILE__, "Set %s value: %s", key, value);
 }
 
-static void save_settings(cJSON *json_settings) {
+static void badge_save_settings(cJSON *json_settings) {
   // Save to settings.json
   char *json = cJSON_Print(json_settings);
   FILE *fp   = fopen(SETTINGS_FILE, "w");
@@ -104,7 +99,7 @@ static void save_settings(cJSON *json_settings) {
   spiffs_size();
 }
 
-static void save_badge_to_settings_file(cJSON *json_settings) {
+static void badge_save_to_settings_file(cJSON *json_settings) {
   cJSON *obj_badge  = cJSON_GetObjectItem(json_settings, "badge");
   cJSON *obj_web    = cJSON_GetObjectItem(json_settings, "web");
   cJSON *obj_ap     = cJSON_GetObjectItem(json_settings, "ap");
@@ -128,10 +123,10 @@ static void save_badge_to_settings_file(cJSON *json_settings) {
   json_set_str_value(obj_secret, "job", badge_obj.secret.job);
   json_set_str_value(obj_secret, "message", badge_obj.secret.message);
 
-  save_settings(json_settings);
+  badge_save_settings(json_settings);
 }
 
-bool update_attribute(enum badge_item_id id, char *data) {
+bool badge_update_attribute(enum badge_item_id id, char *data) {
   switch (id) {
     case WEB_LOGIN_ID:  // Web login password
       snprintf(badge_obj.web_login, SIZEOF(badge_obj.web_login), "%s", data);
@@ -185,15 +180,15 @@ bool update_attribute(enum badge_item_id id, char *data) {
       return false;
       break;
   }
-  cJSON *json_settings = load_file(SETTINGS_FILE);
-  save_badge_to_settings_file(json_settings);
+  cJSON *json_settings = badge_load_file(SETTINGS_FILE);
+  badge_save_to_settings_file(json_settings);
   cJSON_Delete(json_settings);
   return true;
 }
 
-static uint8_t generate_id() { return 1 + (esp_random() % 7); }
+static uint8_t badge_generate_id() { return 1 + (esp_random() % 7); }
 
-static void get_person_from_json(cJSON *json_person, person_t *person) {
+static void badge_get_person_from_json(cJSON *json_person, person_t *person) {
   const char *name         = json_get_str_value(json_person, "name");
   const char *organization = json_get_str_value(json_person, "organization");
   const char *job          = json_get_str_value(json_person, "job");
@@ -213,11 +208,11 @@ void badge_init() {
   bool default_loaded = false;
 
   if (stat(SETTINGS_FILE, &file_stat) == -1) {
-    ESP_ERROR_CHECK(copy_default_to_settings());
+    ESP_ERROR_CHECK(badge_copy_default_to_settings());
     default_loaded = true;
   }
 
-  cJSON *json_settings = load_file(SETTINGS_FILE);
+  cJSON *json_settings = badge_load_file(SETTINGS_FILE);
   cJSON *obj_badge     = cJSON_GetObjectItem(json_settings, "badge");
   cJSON *obj_web       = cJSON_GetObjectItem(json_settings, "web");
   cJSON *obj_ap        = cJSON_GetObjectItem(json_settings, "ap");
@@ -239,7 +234,7 @@ void badge_init() {
   esp_efuse_mac_get_default(badge_obj.mac);
   badge_obj.short_mac = (badge_obj.mac[4] << 8) + badge_obj.mac[5];
   if (default_loaded) {
-    badge_obj.device_id = generate_id();
+    badge_obj.device_id = badge_generate_id();
     snprintf(badge_obj.device_name, SIZEOF(badge_obj.device_name), "Saiyan-%04x", badge_obj.short_mac);
     snprintf(badge_obj.ap_ssid, SIZEOF(badge_obj.ap_ssid), "Saiyan-%04x", badge_obj.short_mac);
     snprintf(badge_obj.ap_password, SIZEOF(badge_obj.ap_password), "%02x%02x%02x%02x", badge_obj.mac[2], badge_obj.mac[3], badge_obj.mac[4], badge_obj.mac[5]);
@@ -255,15 +250,13 @@ void badge_init() {
   snprintf(badge_obj.sta_password, SIZEOF(badge_obj.sta_password), "%s", sta_password);
   snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
 
-  get_person_from_json(obj_person, &badge_obj.person);
-  get_person_from_json(obj_secret, &badge_obj.secret);
+  badge_get_person_from_json(obj_person, &badge_obj.person);
+  badge_get_person_from_json(obj_secret, &badge_obj.secret);
 
   // set brightness  with defaults if not present
   badge_obj.brightness_max = obj_display ? (uint8_t)json_get_int_value(obj_display, "brightness_max") : 255;
   badge_obj.brightness_mid = obj_display ? (uint8_t)json_get_int_value(obj_display, "brightness_mid") : 200;
   badge_obj.brightness_off = obj_display ? (uint8_t)json_get_int_value(obj_display, "brightness_off") : 0;
-
-  badge_obj.update = update_attribute;
 
   ESP_LOGI(__FILE__, "Setting file loaded");
   ESP_LOGI(__FILE__, "The badge ID is: %d", badge_obj.device_id);
@@ -271,7 +264,7 @@ void badge_init() {
   if (default_loaded) {
     ESP_LOGI(__FILE__, "Saving settings file");
     cJSON_AddNumberToObject(obj_badge, "id", (double)badge_obj.device_id);
-    save_badge_to_settings_file(json_settings);
+    badge_save_to_settings_file(json_settings);
     ESP_LOGI(__FILE__, "Setting file saved to default values");
   }
   cJSON_Delete(json_settings);

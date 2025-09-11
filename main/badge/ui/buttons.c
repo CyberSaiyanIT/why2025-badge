@@ -2,49 +2,16 @@
 
 #include "backlight.h"
 #include "config.h"
-#include "../led.h"
+#include "esp_log.h"
+#include "../badge.h"
 
-const int nb_screens                     = NUM_SCREENS;
-static uint8_t up_button_press_counter   = 0;
-static uint8_t down_button_press_counter = 0;
-
-static int8_t counter_screen = -1;  // Initialize to invalid screen index
 static QueueHandle_t button_events;
-lv_timer_t *buttons_timer_handle;
-
-
-void check_counter() {
-  // Check if this is the first button press or if we've changed screens
-  if (counter_screen != current_screen) {
-    // Reset counters when screen changes
-    up_button_press_counter   = 0;
-    down_button_press_counter = 0;
-    // Update counter_screen to current screen
-    counter_screen = current_screen;
-  }
-}
+static lv_timer_t *buttons_timer_handle;
 
 void ui_button_up() {
-  check_counter();
-  // Increment counter for UP button presses
-  up_button_press_counter++;
-  ESP_LOGI("UI", "UP button press count: %d on screen index: %d",
-           up_button_press_counter, current_screen);
+  int8_t current_screen = ui_get_current_screen();
 
-  // Check if we've reached nb_screens presses
-  if (up_button_press_counter == nb_screens) {
-    // Call set_completed() function when on SCREEN_LOGO (index 0)
-    if (current_screen == SCREEN_LOGO) {
-      ESP_LOGI("UI", "Summoning sequence activated!");
-      set_completed();
-    }
-
-    // Reset the counter after reaching nb_screens
-    up_button_press_counter = 0;
-  }
-
-  // Check if the backlight update is needed
-  if (ui_update_backlight(true))
+  if (ui_backlight_update(true))  // Check if the backlight update is needed
     return;
 
   if (screen_config[current_screen].button_up != NULL)
@@ -54,25 +21,8 @@ void ui_button_up() {
 }
 
 void ui_button_down() {
-  check_counter();
-  // Increment counter for DOWN button presses
-  down_button_press_counter++;
-  ESP_LOGI("UI", "DOWN button press count: %d on screen index: %d",
-           down_button_press_counter, current_screen);
-
-  // Check if we've reached nb_screens presses
-  if (down_button_press_counter == nb_screens) {
-    // Call rainbow() function when on SCREEN_LOGO (index 0)
-    if (current_screen == SCREEN_LOGO) {
-      ESP_LOGI("UI", "Rainbow sequence activated!");
-      rainbow();
-    }
-
-    // Reset the counter after reaching nb_screens
-    down_button_press_counter = 0;
-  }
-
-  if (ui_update_backlight(true))
+  int8_t current_screen = ui_get_current_screen();
+  if (ui_backlight_update(true))  // Check if the backlight update is needed
     return;
   if (screen_config[current_screen].button_down != NULL)
     screen_config[current_screen].button_down();
@@ -80,33 +30,29 @@ void ui_button_down() {
     ESP_LOGI(__FILE__, "Button down, no actions");
 }
 
-static void buttons_timer(lv_timer_t *arg) {
+static void ui_button_timer_handler(lv_timer_t *arg) {
   static button_event_t curr_ev;
   static button_event_t prev_ev[2];
 
   if (xQueueReceive(button_events, &curr_ev, 0)) {
-    uint8_t btn_id = curr_ev.pin - 0x08;
-    if (curr_ev.event == BUTTON_HELD) {
-      set_screen_led_backlight(badge_obj.brightness_mid);
-    }
+    uint8_t btn_id = curr_ev.pin - BUTTON_1;
+    if (curr_ev.event == BUTTON_HELD)
+      ui_backlight_set_mid();
+
     if (curr_ev.pin == BUTTON_1)  // DOWN button event
     {
-      if ((prev_ev[btn_id].event == BUTTON_HELD) &&
-          (curr_ev.event == BUTTON_UP)) {
+      if ((prev_ev[btn_id].event == BUTTON_HELD) && (curr_ev.event == BUTTON_UP)) {
         ui_switch_page_down();
-      } else if ((prev_ev[btn_id].event == BUTTON_DOWN) &&
-                 (curr_ev.event == BUTTON_UP)) {
+      } else if ((prev_ev[btn_id].event == BUTTON_DOWN) && (curr_ev.event == BUTTON_UP)) {
         ui_button_down();
       }
     }
 
     if (curr_ev.pin == BUTTON_2)  // UP button event
     {
-      if ((prev_ev[btn_id].event == BUTTON_HELD) &&
-          (curr_ev.event == BUTTON_UP)) {
+      if ((prev_ev[btn_id].event == BUTTON_HELD) && (curr_ev.event == BUTTON_UP)) {
         ui_switch_page_up();
-      } else if ((prev_ev[btn_id].event == BUTTON_DOWN) &&
-                 (curr_ev.event == BUTTON_UP)) {
+      } else if ((prev_ev[btn_id].event == BUTTON_DOWN) && (curr_ev.event == BUTTON_UP)) {
         ui_button_up();
       }
     }
@@ -117,6 +63,6 @@ static void buttons_timer(lv_timer_t *arg) {
 void buttons_init() {
   ESP_LOGI(__FILE__, "Starting button init");
   button_events        = button_init(PIN_BIT(BUTTON_1) | PIN_BIT(BUTTON_2));
-  buttons_timer_handle = lv_timer_create(buttons_timer, 100, NULL);
+  buttons_timer_handle = lv_timer_create(ui_button_timer_handler, 100, NULL);
   lv_timer_resume(buttons_timer_handle);
 }

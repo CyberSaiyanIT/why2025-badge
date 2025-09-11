@@ -22,16 +22,12 @@ enum LED_COLOR {
 
 void led_init();
 
-void set_screen_led_backlight(uint8_t);
-
 void led_task(void* arg);
 
-void set_completed(void);
+void led_set_completed(void);
 
-void rainbow(void);
+void led_rainbow(void);
 
-void flash(int period, uint8_t fade_factor);
-
-void set_easter_egg_active(bool active);
+void led_set_easter_egg_active(bool active);
 
 #endif // _LED_H

@@ -15,7 +15,7 @@
 #define TMP_SCHEDULE_FILE "/data/schedule.json.tmp"
 
 
-char *load_schedule_from_file();
+char *schedule_load_from_file();
 void schedule_sync_handler();
 
 #endif // _SCHEDULE_H

@@ -14,7 +14,7 @@
 
 #define is_string_match(a, c) (!strncmp(a, c, sizeof(c)))
 
-static esp_err_t rest_send_response(httpd_req_t *req, char *response) {
+static esp_err_t httpd_api_send_response(httpd_req_t *req, char *response) {
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
   if (httpd_resp_sendstr(req, response) != ESP_OK) {
     ESP_LOGE(__FILE__, "Response failed!");
@@ -26,7 +26,7 @@ static esp_err_t rest_send_response(httpd_req_t *req, char *response) {
   return ESP_OK;
 }
 
-static esp_err_t system_info_handler(httpd_req_t *req) {
+static esp_err_t httpd_api_system_info_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response = cJSON_CreateObject();
@@ -42,28 +42,28 @@ static esp_err_t system_info_handler(httpd_req_t *req) {
 
   char *response_str = cJSON_PrintUnformatted(response);
 
-  esp_err_t err = rest_send_response(req, response_str);
+  esp_err_t err = httpd_api_send_response(req, response_str);
 
   cJSON_free((void *)response_str);
   cJSON_Delete(response);
   return err;
 }
 
-static esp_err_t schedule_handler(httpd_req_t *req) {
+static esp_err_t httpd_api_schedule_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "application/json");
-  const char *buf = load_schedule_from_file();
+  const char *buf = schedule_load_from_file();
 
   if (!buf) {
     httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on load_schedule_from_file()");
     return ESP_FAIL;
   }
 
-  esp_err_t err = rest_send_response(req, (char *)buf);
+  esp_err_t err = httpd_api_send_response(req, (char *)buf);
   free((char *)buf);
   return err;
 }
 
-static esp_err_t login_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_login_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response    = cJSON_CreateObject();
@@ -78,11 +78,11 @@ static esp_err_t login_handler(httpd_req_t *req, const char *client_data) {
     cJSON_AddStringToObject(response, "key", get_session_key());
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on login_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_login_handler() function");
     err = ESP_FAIL;
   }
 
@@ -91,22 +91,22 @@ static esp_err_t login_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-static esp_err_t logout_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_logout_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response = cJSON_CreateObject();
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     session_destroy();
 
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on logout_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_logout_handler() function");
     err = ESP_FAIL;
   }
 
@@ -115,20 +115,20 @@ static esp_err_t logout_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-static esp_err_t check_auth_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_check_auth_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response = cJSON_CreateObject();
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on check_auth_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_check_auth_handler() function");
     err = ESP_FAIL;
   }
 
@@ -137,7 +137,7 @@ static esp_err_t check_auth_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-static esp_err_t radar_handler(httpd_req_t *req) {
+static esp_err_t httpd_api_radar_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "application/json");
   cJSON *response = cJSON_CreateObject();
   cJSON *radar    = cJSON_AddArrayToObject(response, "radar");
@@ -160,34 +160,34 @@ static esp_err_t radar_handler(httpd_req_t *req) {
 
   char *response_str = cJSON_PrintUnformatted(response);
 
-  esp_err_t err = rest_send_response(req, response_str);
+  esp_err_t err = httpd_api_send_response(req, response_str);
   cJSON_free((void *)response_str);
   cJSON_Delete(response);
   return err;
 }
 
-static esp_err_t badge_name_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_badge_name_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response    = cJSON_CreateObject();
   cJSON *client_json = cJSON_Parse(client_data);
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     cJSON *name = cJSON_GetObjectItem(client_json, "name");
     if (cJSON_IsString(name) && (name->valuestring != NULL)) {
       if (strlen(name->valuestring) > 0) {
-        badge_obj.update(DEVICE_NAME_ID, name->valuestring);
+        badge_update_attribute(DEVICE_NAME_ID, name->valuestring);
       }
     }
     cJSON_AddStringToObject(response, "name", badge_obj.device_name);
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on badge_name_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_badge_name_handler() function");
     err = ESP_FAIL;
   }
 
@@ -197,14 +197,14 @@ static esp_err_t badge_name_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-static esp_err_t person_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_person_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response    = cJSON_CreateObject();
   cJSON *client_json = cJSON_Parse(client_data);
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     cJSON *person = cJSON_GetObjectItem(client_json, "person");
     if (cJSON_IsObject(person)) {
       cJSON *name         = cJSON_GetObjectItem(person, "name");
@@ -214,17 +214,17 @@ static esp_err_t person_handler(httpd_req_t *req, const char *client_data) {
       cJSON *url          = cJSON_GetObjectItem(person, "url");
 
       if (cJSON_IsString(name) && name->valuestring != NULL && strlen(name->valuestring) > 0)
-        badge_obj.update(PERSON_NAME_ID, name->valuestring);
+        badge_update_attribute(PERSON_NAME_ID, name->valuestring);
       if (cJSON_IsString(organization) && organization->valuestring != NULL && strlen(organization->valuestring) > 0)
-        badge_obj.update(PERSON_ORGANIZATION_ID, organization->valuestring);
+        badge_update_attribute(PERSON_ORGANIZATION_ID, organization->valuestring);
       if (cJSON_IsString(job) && job->valuestring != NULL && strlen(job->valuestring) > 0)
-        badge_obj.update(PERSON_JOB_ID, job->valuestring);
+        badge_update_attribute(PERSON_JOB_ID, job->valuestring);
       if (cJSON_IsString(message) && message->valuestring != NULL && strlen(message->valuestring) > 0)
-        badge_obj.update(PERSON_MESSAGE_ID, message->valuestring);
+        badge_update_attribute(PERSON_MESSAGE_ID, message->valuestring);
       if (cJSON_IsString(url) && url->valuestring != NULL && strlen(url->valuestring) > 0)
-        badge_obj.update(PERSON_URL_ID, url->valuestring);
+        badge_update_attribute(PERSON_URL_ID, url->valuestring);
 
-      ui_set_person(false);
+      ui_person_set_secret(false);
     }
     cJSON *person_obj = cJSON_CreateObject();
     cJSON_AddStringToObject(person_obj, "name", badge_obj.person.name);
@@ -236,11 +236,11 @@ static esp_err_t person_handler(httpd_req_t *req, const char *client_data) {
 
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on person_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_person_handler() function");
     err = ESP_FAIL;
   }
 
@@ -250,14 +250,14 @@ static esp_err_t person_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-static esp_err_t secret_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_secret_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response    = cJSON_CreateObject();
   cJSON *client_json = cJSON_Parse(client_data);
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     cJSON *secret = cJSON_GetObjectItem(client_json, "secret");
     if (cJSON_IsObject(secret)) {
       cJSON *name         = cJSON_GetObjectItem(secret, "name");
@@ -267,17 +267,17 @@ static esp_err_t secret_handler(httpd_req_t *req, const char *client_data) {
       cJSON *url          = cJSON_GetObjectItem(secret, "url");
 
       if (cJSON_IsString(name) && name->valuestring != NULL && strlen(name->valuestring) > 0)
-        badge_obj.update(SECRET_NAME_ID, name->valuestring);
+        badge_update_attribute(SECRET_NAME_ID, name->valuestring);
       if (cJSON_IsString(organization) && organization->valuestring != NULL && strlen(organization->valuestring) > 0)
-        badge_obj.update(SECRET_ORGANIZATION_ID, organization->valuestring);
+        badge_update_attribute(SECRET_ORGANIZATION_ID, organization->valuestring);
       if (cJSON_IsString(job) && job->valuestring != NULL && strlen(job->valuestring) > 0)
-        badge_obj.update(SECRET_JOB_ID, job->valuestring);
+        badge_update_attribute(SECRET_JOB_ID, job->valuestring);
       if (cJSON_IsString(message) && message->valuestring != NULL && strlen(message->valuestring) > 0)
-        badge_obj.update(SECRET_MESSAGE_ID, message->valuestring);
+        badge_update_attribute(SECRET_MESSAGE_ID, message->valuestring);
       if (cJSON_IsString(url) && url->valuestring != NULL && strlen(url->valuestring) > 0)
-        badge_obj.update(SECRET_URL_ID, url->valuestring);
+        badge_update_attribute(SECRET_URL_ID, url->valuestring);
 
-      ui_set_person(true);
+      ui_person_set_secret(true);
     }
     cJSON *secret_obj = cJSON_CreateObject();
     cJSON_AddStringToObject(secret_obj, "name", badge_obj.secret.name);
@@ -289,11 +289,11 @@ static esp_err_t secret_handler(httpd_req_t *req, const char *client_data) {
 
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on secret_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_secret_handler() function");
     err = ESP_FAIL;
   }
 
@@ -303,23 +303,23 @@ static esp_err_t secret_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-static esp_err_t wifi_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_wifi_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response    = cJSON_CreateObject();
   cJSON *client_json = cJSON_Parse(client_data);
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     cJSON *wifi = cJSON_GetObjectItem(client_json, "wifi");
     if (cJSON_IsObject(wifi)) {
       cJSON *ssid     = cJSON_GetObjectItem(wifi, "ssid");
       cJSON *password = cJSON_GetObjectItem(wifi, "password");
 
       if (cJSON_IsString(ssid) && (ssid->valuestring != NULL) && (strlen(ssid->valuestring) > 0)) {
-        badge_obj.update(WIFI_SSID_ID, ssid->valuestring);
+        badge_update_attribute(WIFI_SSID_ID, ssid->valuestring);
       } else if (cJSON_IsString(password) && (password->valuestring != NULL) && (strlen(password->valuestring) > 0)) {
-        badge_obj.update(DEVICE_NAME_ID, password->valuestring);
+        badge_update_attribute(DEVICE_NAME_ID, password->valuestring);
       }
     }
 
@@ -330,12 +330,12 @@ static esp_err_t wifi_handler(httpd_req_t *req, const char *client_data) {
 
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
 
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on wifi_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_wifi_handler() function");
     err = ESP_FAIL;
   }
 
@@ -345,7 +345,7 @@ static esp_err_t wifi_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-static esp_err_t password_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_password_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response = cJSON_CreateObject();
@@ -353,18 +353,18 @@ static esp_err_t password_handler(httpd_req_t *req, const char *client_data) {
   cJSON *client_json = cJSON_Parse(client_data);
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     cJSON *password = cJSON_GetObjectItem(client_json, "password");
     if (cJSON_IsString(password) && (password->valuestring != NULL) && (strlen(password->valuestring) > 0)) {
-      badge_obj.update(WEB_LOGIN_ID, password->valuestring);
+      badge_update_attribute(WEB_LOGIN_ID, password->valuestring);
     }
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on password_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_password_handler() function");
     err = ESP_FAIL;
   }
 
@@ -378,16 +378,16 @@ static void reset_timer_callback(void *arg) {
   esp_restart();
 }
 
-static esp_err_t reset_handler(httpd_req_t *req, const char *client_data) {
+static esp_err_t httpd_api_reset_handler(httpd_req_t *req, const char *client_data) {
   httpd_resp_set_type(req, "application/json");
 
   cJSON *response = cJSON_CreateObject();
 
   esp_err_t err;
-  if (check_session(req, client_data)) {
+  if (session_check(req, client_data)) {
     char *response_str = cJSON_PrintUnformatted(response);
 
-    err = rest_send_response(req, response_str);
+    err = httpd_api_send_response(req, response_str);
 
     cJSON_free((void *)response_str);
 
@@ -401,7 +401,7 @@ static esp_err_t reset_handler(httpd_req_t *req, const char *client_data) {
       esp_timer_start_once(reset_timer, 3 * 1000000);
     }
   } else {
-    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on reset_handler() function");
+    httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on httpd_api_reset_handler() function");
     err = ESP_FAIL;
   }
 
@@ -410,7 +410,7 @@ static esp_err_t reset_handler(httpd_req_t *req, const char *client_data) {
   return err;
 }
 
-esp_err_t post_handler(httpd_req_t *req) {
+esp_err_t httpd_api_handler(httpd_req_t *req) {
   int total_len = req->content_len;
   int cur_len   = 0;
   char buf[SCRATCH_BUFSIZE];
@@ -438,29 +438,29 @@ esp_err_t post_handler(httpd_req_t *req) {
   ESP_LOGI(__FILE__, "command: %s", cmd);
 
   if (is_string_match(cmd, "login")) {
-    login_handler(req, buf);
+    httpd_api_login_handler(req, buf);
   } else if (is_string_match(cmd, "logout")) {
-    logout_handler(req, buf);
+    httpd_api_logout_handler(req, buf);
   } else if (is_string_match(cmd, "check_authentication")) {
-    check_auth_handler(req, buf);
+    httpd_api_check_auth_handler(req, buf);
   } else if (is_string_match(cmd, "schedule")) {
-    schedule_handler(req);
+    httpd_api_schedule_handler(req);
   } else if (is_string_match(cmd, "info")) {
-    system_info_handler(req);
+    httpd_api_system_info_handler(req);
   } else if (is_string_match(cmd, "radar")) {
-    radar_handler(req);
+    httpd_api_radar_handler(req);
   } else if (is_string_match(cmd, "name")) {
-    badge_name_handler(req, buf);
+    httpd_api_badge_name_handler(req, buf);
   } else if (is_string_match(cmd, "person")) {
-    person_handler(req, buf);
+    httpd_api_person_handler(req, buf);
   } else if (is_string_match(cmd, "secret")) {
-    secret_handler(req, buf);
+    httpd_api_secret_handler(req, buf);
   } else if (is_string_match(cmd, "wifi")) {
-    wifi_handler(req, buf);
+    httpd_api_wifi_handler(req, buf);
   } else if (is_string_match(cmd, "password")) {
-    password_handler(req, buf);
+    httpd_api_password_handler(req, buf);
   } else if (is_string_match(cmd, "reset")) {
-    reset_handler(req, buf);
+    httpd_api_reset_handler(req, buf);
   } else {
     httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "not found");
   }

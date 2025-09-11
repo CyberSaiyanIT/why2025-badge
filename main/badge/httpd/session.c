@@ -6,7 +6,7 @@
 
 static char session_key[SESSION_KEY_LEN + 1];
 
-void byte_to_hex_str(char *xp, const char *bb, int n) {
+static void byte_to_hex_str(char *xp, const char *bb, int n) {
   const char xx[] = "0123456789ABCDEF";
   while (--n >= 0)
     xp[n] = xx[(bb[n >> 1] >> ((1 - (n & 1)) << 2)) & 0xF];
@@ -30,7 +30,7 @@ esp_err_t session_init(httpd_req_t *req) {
   return ESP_OK;
 }
 
-bool check_session(httpd_req_t *req, const char *client_data) {
+bool session_check(httpd_req_t *req, const char *client_data) {
   if (!session_key[0]) return false;
   if (!client_data) return false;
 

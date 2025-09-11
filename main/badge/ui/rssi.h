@@ -4,9 +4,7 @@
 #include <lvgl.h>
 #include "../badge.h"
 
-extern lv_timer_t *rssi_timer_handle;
-extern lv_obj_t *screen_rssi;
-
-lv_obj_t *ui_screen_rssi_init();
-
+lv_obj_t *ui_rssi_init();
+void ui_rssi_load();
+void ui_rssi_unload();
 #endif

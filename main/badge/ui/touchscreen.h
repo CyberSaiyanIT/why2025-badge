@@ -39,6 +39,6 @@ typedef struct {
 } point_t;
 
 
-void touchscreen_init();
+void ui_touchscreen_init();
 
 #endif

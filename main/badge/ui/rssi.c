@@ -2,10 +2,10 @@
 #include "../bt.h"
 
 static lv_obj_t *table_rssi;
-lv_timer_t *rssi_timer_handle;
-lv_obj_t *screen_rssi;
+static lv_timer_t *rssi_timer_handle;
+static lv_obj_t *screen_rssi;
 
-static void ui_rssi_timer(lv_timer_t *arg) {
+static void ui_rssi_timer_handler(lv_timer_t *arg) {
   if (lv_scr_act() != screen_rssi) {
     lv_timer_pause(rssi_timer_handle);
     return;
@@ -37,7 +37,7 @@ static void ui_rssi_timer(lv_timer_t *arg) {
   }
 }
 
-lv_obj_t *ui_screen_rssi_init() {
+lv_obj_t *ui_rssi_init() {
   // page for rssi
   static lv_style_t style;
   lv_style_init(&style);
@@ -65,8 +65,11 @@ lv_obj_t *ui_screen_rssi_init() {
   lv_table_set_col_width(table_rssi, 1, LV_HOR_RES / 3);
   lv_table_set_col_width(table_rssi, 2, LV_HOR_RES / 3);
 
-  rssi_timer_handle = lv_timer_create(ui_rssi_timer, 2000, NULL);
+  rssi_timer_handle = lv_timer_create(ui_rssi_timer_handler, 2000, NULL);
   lv_timer_pause(rssi_timer_handle);
 
   return (screen_rssi);
 }
+
+void ui_rssi_load() { lv_timer_resume(rssi_timer_handle); }
+void ui_rssi_unload() { lv_timer_pause(rssi_timer_handle); }

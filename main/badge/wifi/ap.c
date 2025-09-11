@@ -14,38 +14,38 @@
 esp_timer_handle_t inactivity_timer;
 static int8_t ap_clients_num = 0;
 
-static void inactivity_timer_callback(void* arg) {
+static void wifi_ap_inactivity_timer_cb(void* arg) {
   if (!ap_clients_num) {
     ESP_LOGI(__FILE__, "Inactivity detected");
-    stop_wifi();
+    wifi_stop_all();
   } else
     ESP_LOGE(__FILE__, "Timer should not be running...");
 }
 
-static inline void start_inactivity_timer() { esp_timer_start_once(inactivity_timer, AP_INACTIVITY_TIMEOUT_S * 10000000); }
+static inline void wifi_ap_start_inactivity_timer() { esp_timer_start_once(inactivity_timer, AP_INACTIVITY_TIMEOUT_S * 10000000); }
 
-static void ap_staconnected_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+static void wifi_ap_staconnected_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*)event_data;
   ESP_LOGI(__FILE__, "station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
   ap_clients_num++;
   esp_timer_stop(inactivity_timer);
 }
-static void ap_stadisconnected_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+static void wifi_ap_stadisconnected_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*)event_data;
   ESP_LOGI(__FILE__, "station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
   ap_clients_num--;
   if (ap_clients_num < 0) ap_clients_num = 0;
-  if (!ap_clients_num) start_inactivity_timer();
+  if (!ap_clients_num) wifi_ap_start_inactivity_timer();
 }
-static void ap_start_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-  ui_ap_start_handler();
-}
-
-static void ap_stop_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-  ui_ap_stop_handler();
+static void wifi_ap_start_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+  ui_admin_ap_start_event();
 }
 
-bool start_wifi_ap() {
+static void wifi_ap_stop_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+  ui_admin_ap_stop_event();
+}
+
+bool wifi_ap_start() {
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
 
   wifi_config_t wifi_config = {0};
@@ -61,15 +61,15 @@ bool start_wifi_ap() {
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
   ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
 
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &ap_staconnected_event, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &ap_stadisconnected_event, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_START, &ap_start_handler, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STOP, &ap_stop_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &wifi_ap_staconnected_event, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &wifi_ap_stadisconnected_event, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_START, &wifi_ap_start_event, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STOP, &wifi_ap_stop_event, NULL));
 
   ESP_ERROR_CHECK(esp_wifi_start());
   ESP_ERROR_CHECK(esp_wifi_set_inactive_time(WIFI_IF_AP, AP_INACTIVITY_TIMEOUT_S));
 
-  start_inactivity_timer();
+  wifi_ap_start_inactivity_timer();
 
   ESP_LOGI(__FILE__, "WIFI_MODE_AP started. SSID:%s password:|%s|", badge_obj.ap_ssid, badge_obj.ap_password);
   ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
@@ -77,22 +77,22 @@ bool start_wifi_ap() {
   return ESP_OK;
 }
 
-void stop_wifi_ap() {
+void wifi_ap_stop() {
   ESP_LOGI(__FILE__, "Stopping wifi AP");
   ESP_LOGI(__FILE__, "Stopping Inactivity timer");
   esp_timer_stop(inactivity_timer);
   ESP_LOGI(__FILE__, "Unregister events");
-  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &ap_staconnected_event);
-  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &ap_stadisconnected_event);
-  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_START, &ap_start_handler);
-  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_STOP, &ap_stop_handler);
+  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &wifi_ap_staconnected_event);
+  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &wifi_ap_stadisconnected_event);
+  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_START, &wifi_ap_start_event);
+  esp_event_handler_unregister(WIFI_EVENT, WIFI_EVENT_AP_STOP, &wifi_ap_stop_event);
   ESP_LOGI(__FILE__, "Wifi AP stopped");
 }
 
 void wifi_ap_init() {
   ap_clients_num                           = 0;
   const esp_timer_create_args_t timer_args = {
-      .callback = &inactivity_timer_callback,
+      .callback = &wifi_ap_inactivity_timer_cb,
       .name     = "inactivity-timer"};
 
   ESP_ERROR_CHECK(esp_timer_create(&timer_args, &inactivity_timer));

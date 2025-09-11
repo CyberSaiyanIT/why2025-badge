@@ -37,9 +37,7 @@ static int check_duplicate(const ble_node_t *item) {
   // ESP_LOGI(__FILE__, "STRCMP result: %d", strcmp(ble_nodes[0].name, item->name));
   for (int i = 0; i < MAX_NEARBY_NODE; i++) {
     if (!strcmp(ble_nodes[i].name, item->name))  // same name - avoid duplicates
-    {
       return i;
-    }
   }
   return -1;
 }

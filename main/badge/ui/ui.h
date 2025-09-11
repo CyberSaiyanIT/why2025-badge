@@ -12,11 +12,13 @@
 #define SCROLL_UP 80
 #define SCROLL_DOWN -80
 
-extern lv_obj_t *screens[NUM_SCREENS];
-extern int8_t current_screen;
-
-void scroll_up();
-void scroll_down();
+int8_t ui_get_current_screen();
+void ui_resume_current_screen();
+void ui_pause_current_screen();
+void ui_scroll_up();
+void ui_scroll_down();
+void ui_load_current_screen();
+void ui_unload_current_screen();
 void ui_switch_page_up();
 void ui_switch_page_down();
 void ui_task(void *);

@@ -1,6 +1,10 @@
 #include "snake.h"
 #include "esp_log.h"
 
+static void ui_snake_set_dir(int8_t dir);
+
+static void ui_snake_timer_handler(lv_timer_t *arg);
+static void ui_snake_reset(lv_obj_t *parent);
 
 const char ui_snake_eyes[][4] = {"' '", ": ", ". .", " :"};
 
@@ -8,18 +12,7 @@ static snake_t snake;
 lv_timer_t *snake_timer_handle;
 lv_obj_t *screen_snake;
 
-lv_obj_t *ui_screen_snake_init() {
-  // page for snake
-  screen_snake = lv_obj_create(NULL);
-  snake_reset(screen_snake);
-
-  snake_timer_handle = lv_timer_create(snake_timer, 50, NULL);
-  lv_timer_pause(snake_timer_handle);
-
-  return (screen_snake);
-}
-
-void snake_set_dir(int8_t dir) {
+static void ui_snake_set_dir(int8_t dir) {
   dir += snake.dir;
   if (dir < SNAKE_DIR_BEGIN)
     dir = SNAKE_DIR_END;
@@ -29,7 +22,7 @@ void snake_set_dir(int8_t dir) {
   lv_label_set_text(snake.eye, ui_snake_eyes[snake.dir - SNAKE_DIR_BEGIN]);
 }
 
-static void snake_add_body(lv_obj_t *parent) {
+static void ui_snake_add_body(lv_obj_t *parent) {
   if (snake.size >= UI_SNAKE_MAX_BODY)
     return;
 
@@ -40,7 +33,7 @@ static void snake_add_body(lv_obj_t *parent) {
   lv_obj_set_size(snake.body[index], UI_SNAKE_BODY_SIZE, UI_SNAKE_BODY_SIZE);
 }
 
-void snake_reset(lv_obj_t *parent) {
+static void ui_snake_reset(lv_obj_t *parent) {
   if (snake_timer_handle)
     lv_timer_pause(snake_timer_handle);
 
@@ -56,14 +49,14 @@ void snake_reset(lv_obj_t *parent) {
     snake.food = NULL;
   }
 
-  snake_add_body(parent);  // head
+  ui_snake_add_body(parent);  // head
   snake.eye = lv_label_create(snake.body[0]);
-  snake_set_dir(SNAKE_DIR_RIGHT);
+  ui_snake_set_dir(SNAKE_DIR_RIGHT);
   lv_obj_set_pos(snake.body[0], UI_SNAKE_BODY_SIZE * 3, UI_SNAKE_BODY_SIZE * 6);
 
-  snake_add_body(parent);
+  ui_snake_add_body(parent);
   lv_obj_set_pos(snake.body[1], UI_SNAKE_BODY_SIZE * 2, UI_SNAKE_BODY_SIZE * 6);
-  snake_add_body(parent);
+  ui_snake_add_body(parent);
   lv_obj_set_pos(snake.body[2], UI_SNAKE_BODY_SIZE * 1, UI_SNAKE_BODY_SIZE * 6);
 
   snake.speed = SNAKE_MIN_SPEED;
@@ -71,7 +64,7 @@ void snake_reset(lv_obj_t *parent) {
 
 static int counter = 0;
 
-void snake_timer(lv_timer_t *arg) {
+static void ui_snake_timer_handler(lv_timer_t *arg) {
   // not current page, ignore.
   if (lv_scr_act() != screen_snake) {
     lv_timer_pause(snake_timer_handle);
@@ -106,13 +99,13 @@ void snake_timer(lv_timer_t *arg) {
 
   // check if head hit any wall.
   if (x >= LV_HOR_RES || x < 0 || y >= LV_VER_RES || y < 0) {
-    snake_reset(screen_snake);
+    ui_snake_reset(screen_snake);
     return;
   }
   // check if head hit any body.
   for (int i = 1; i < snake.size; i++) {
     if (x == lv_obj_get_x(snake.body[i]) && y == lv_obj_get_y(snake.body[i])) {
-      snake_reset(screen_snake);
+      ui_snake_reset(screen_snake);
       return;
     }
   }
@@ -121,7 +114,7 @@ void snake_timer(lv_timer_t *arg) {
     if (x == lv_obj_get_x(snake.food) && y == lv_obj_get_y(snake.food)) {
       lv_obj_del(snake.food);
       snake.food = NULL;
-      snake_add_body(parent);
+      ui_snake_add_body(parent);
 
       if (snake.size % SNAKE_STEP_SPEED == 0 && snake.speed > 0) {
         snake.speed--;
@@ -148,11 +141,22 @@ void snake_timer(lv_timer_t *arg) {
   lv_obj_set_pos(snake.body[0], x, y);  // head is last one.
 }
 
-void snake_button_up() {
-  lv_timer_resume(snake_timer_handle);
-  snake_set_dir(1);
+lv_obj_t *ui_screen_snake_init() {
+  // page for snake
+  screen_snake = lv_obj_create(NULL);
+  ui_snake_reset(screen_snake);
+
+  snake_timer_handle = lv_timer_create(ui_snake_timer_handler, 50, NULL);
+  lv_timer_pause(snake_timer_handle);
+
+  return (screen_snake);
 }
-void snake_button_down() {
+
+void ui_snake_button_up() {
   lv_timer_resume(snake_timer_handle);
-  snake_set_dir(-1);
+  ui_snake_set_dir(1);
+}
+void ui_snake_button_down() {
+  lv_timer_resume(snake_timer_handle);
+  ui_snake_set_dir(-1);
 }

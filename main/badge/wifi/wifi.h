@@ -10,14 +10,13 @@ enum badge_wifi_event_t {
   EVENT_AP_START,
   EVENT_STA_START,
   EVENT_STOP
-} ;
+};
 
-void stop_wifi(void);
 void wifi_init(void);
 void wifi_task(void*);
 
-void start_ap();
-void start_sta();
-void stop_all();
+void wifi_start_ap();
+void wifi_start_sta();
+void wifi_stop_all();
 
 #endif

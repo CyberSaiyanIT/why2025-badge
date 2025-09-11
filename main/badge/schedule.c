@@ -13,7 +13,7 @@ static int64_t last_run    = 0;
 static int64_t current_run = 0;
 static bool errors, connected = false;
 
-char *load_schedule_from_file() {
+char *schedule_load_from_file() {
   FILE *fp = fopen(SCHEDULE_FILE, "r");
   ESP_LOGI(__FILE__, "File to open: %s", SCHEDULE_FILE);
 
@@ -110,7 +110,7 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt) {
       }
       ESP_LOGI(__FILE__, "File saved %d bytes", output_len);
 
-      ui_event_load();  // Preload in UI
+      ui_event_load_schedule();  // Preload in UI
       break;
     case HTTP_EVENT_DISCONNECTED:
       ESP_LOGI(__FILE__, "HTTP_EVENT_DISCONNECTED");

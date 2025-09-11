@@ -32,6 +32,6 @@
 #define BYTES_PER_PIXEL (LV_COLOR_FORMAT_GET_SIZE(LV_COLOR_FORMAT_RGB888))
 #define LVGL_BUF_SIZE LCD_H_RES * LCD_V_RES / 10 * BYTES_PER_PIXEL
 
-void lcd_init();
+void ui_lcd_init();
 
 #endif

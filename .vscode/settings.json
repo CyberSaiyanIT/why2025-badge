@@ -61,6 +61,7 @@
         "storage.h": "c",
         "esp_err.h": "c",
         "buttons.h": "c",
-        "rssi.h": "c"
+        "rssi.h": "c",
+        "config.h": "c"
     }
 }

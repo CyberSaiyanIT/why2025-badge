@@ -13,6 +13,5 @@ typedef struct
   wifi_mode_t wifi_mode;
 } wifi_info_t;
 
-void list_all_netifs();
-esp_err_t update_ip_info(wifi_info_t *wifi_info);
+esp_err_t wifi_update_ip_info(wifi_info_t *wifi_info);
 #endif

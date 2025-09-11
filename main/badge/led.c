@@ -12,9 +12,9 @@ static bool easter_egg_active =
 void led_init() {
   // setup aw9523b led drivers.
   // chip 1, address = 0x5a; chip 2, address = 0x5b.
-  i2c_register_write(AW9523B_handle, 0x11, 0x01);
-  i2c_register_write(AW9523B_handle, 0x12, 0x80);
-  i2c_register_write(AW9523B_handle, 0x13, 0x80);
+  i2c_write_register(AW9523B_handle, 0x11, 0x01);
+  i2c_write_register(AW9523B_handle, 0x12, 0x80);
+  i2c_write_register(AW9523B_handle, 0x13, 0x80);
 
   led_strip_config_t strip_config = {
       .strip_gpio_num = LED_RMT_TX_GPIO,  // The GPIO that connected to the LED
@@ -66,20 +66,20 @@ static void led_rgb_off(uint8_t id) {
   led_rgb_color(id, rgb_color);
 }
 
-static void all_on(rgb_t color) {
+static void led_all_on(rgb_t color) {
   for (int i = 0; i < 7; i++) {
     led_rgb_color(i, color);
   }
 }
 
-static void all_off() {
+static void led_all_off() {
   // Clear LED strip (turn off all LEDs)
   ESP_ERROR_CHECK(led_strip_clear(strip));
   // ESP_ERROR_CHECK(strip->clear(strip, 100));
   vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 
-static void set_leds_by_badge_id(rgb_t color) {
+static void led_set_by_badge_id(rgb_t color) {
   static bool round = false;
   ESP_LOGI(__FILE__, "set_leds_by_badge_id: device_id = %d",
            badge_obj.device_id);
@@ -129,46 +129,46 @@ static void set_leds_by_badge_id(rgb_t color) {
       led_rgb_color(6, color);
       break;
     case 7:
-      all_on(color);
+      led_all_on(color);
       break;
   }
   round = !round;
 }
 
-void flash(int period, uint8_t fade_factor) {
+static void led_flash(int period, uint8_t fade_factor) {
   rgb_t color = rgb_from_code(MAGENTA_SAIYAN);
   color       = rgb_fade(color, fade_factor);
   ESP_LOGI(__FILE__, "Start flashing");
-  set_leds_by_badge_id(color);
+  led_set_by_badge_id(color);
   vTaskDelay(300 / portTICK_PERIOD_MS);
-  all_off();
+  led_all_off();
   ESP_LOGI(__FILE__, "All LEDs off");
   vTaskDelay(period / portTICK_PERIOD_MS);
 }
 
-void set_completed() {
-  set_easter_egg_active(true);  // Block LED flashing
+void led_set_completed() {
+  led_set_easter_egg_active(true);  // Block LED flashing
 
   rgb_t color = rgb_from_code(MAGENTA_SAIYAN);
   color       = rgb_fade(color, 0xf0);
   for (int i = 1; i < 7; i++) {
     led_rgb_color(i, color);
     vTaskDelay(200 / portTICK_PERIOD_MS);
-    all_off();
+    led_all_off();
   }
   vTaskDelay(20 / portTICK_PERIOD_MS);
-  all_on(color);
+  led_all_on(color);
   vTaskDelay(1000 / portTICK_PERIOD_MS);
   for (int i = 0; i < 7; i++) {
     led_rgb_off(i);
     vTaskDelay(200 / portTICK_PERIOD_MS);
   }
 
-  set_easter_egg_active(false);  // Re-enable LED flashing
+  led_set_easter_egg_active(false);  // Re-enable LED flashing
 }
 
-void rainbow() {
-  set_easter_egg_active(true);  // Block LED flashing
+void led_rainbow() {
+  led_set_easter_egg_active(true);  // Block LED flashing
 
   // Define rainbow colors using HSV for better color representation
   uint8_t rainbow_hues[7] = {
@@ -215,10 +215,10 @@ void rainbow() {
 
   ESP_LOGI(__FILE__, "Rainbow sequence completed");
 
-  set_easter_egg_active(false);  // Re-enable LED flashing
+  led_set_easter_egg_active(false);  // Re-enable LED flashing
 }
 
-void set_easter_egg_active(bool active) {
+void led_set_easter_egg_active(bool active) {
   easter_egg_active = active;
   ESP_LOGI(__FILE__, "Easter egg mode %s", active ? "ENABLED" : "DISABLED");
 }
@@ -239,15 +239,15 @@ void led_task(void *arg) {
     bool nearby_set = check_ble_set();
     if (nearby_set) {
       ESP_LOGI(__FILE__, "Set found");
-      set_completed();
+      led_set_completed();
     } else {
       uint8_t nearby_count = count_ble_nodes();
       if (nearby_count > 0) {
         ESP_LOGI(__FILE__, "Badges around: %d", nearby_count);
-        flash(5000, 0xf0);
+        led_flash(5000, 0xf0);
       } else {
         ESP_LOGI(__FILE__, "It is just me around");
-        flash(10000, 0xfa);
+        led_flash(10000, 0xfa);
       }
     }
   }

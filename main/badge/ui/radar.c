@@ -1,11 +1,12 @@
 #include "radar.h"
 #include "lcd.h"
 #include "../bt.h"
+
 static lv_obj_t *radar_node[MAX_NEARBY_NODE]        = {0};
 static lv_obj_t *radar_node_number[MAX_NEARBY_NODE] = {0};
 
-lv_timer_t *radar_timer_handle;
-lv_obj_t *screen_radar;
+static lv_timer_t *radar_timer_handle;
+static lv_obj_t *screen_radar;
 
 static void ui_radar_timer(lv_timer_t *arg) {
   if (lv_scr_act() != screen_radar) {
@@ -69,7 +70,7 @@ static void ui_radar_timer(lv_timer_t *arg) {
   }
 }
 
-lv_obj_t *ui_screen_radar_init() {
+lv_obj_t *ui_radar_init() {
   // Page for radar
   LV_IMG_DECLARE(img_radar);
 
@@ -98,3 +99,6 @@ lv_obj_t *ui_screen_radar_init() {
 
   return (screen_radar);
 }
+
+void ui_radar_load() { lv_timer_resume(radar_timer_handle); }
+void ui_radar_unload() { lv_timer_pause(radar_timer_handle); }

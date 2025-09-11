@@ -75,14 +75,11 @@ typedef struct {
   uint8_t brightness_mid;
   uint8_t brightness_off;
 
-  char *schedule_buffer;
-  bool (*update)(enum badge_item_id id, char *data);
-  // bool (*update_schedule)();
 } badge_obj_t;
 
 extern badge_obj_t badge_obj;
 
+bool badge_update_attribute(enum badge_item_id id, char *data);
 void badge_init();
-char *load_file_content(const char *filename);
 
 #endif  // _DRAGON_H

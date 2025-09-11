@@ -3,7 +3,7 @@
 #include "esp_wifi.h"
 #include "../badge.h"
 
-void list_all_netifs() {
+static void wifi_list_all_netifs() {
   ESP_LOGI(__FILE__, "=== LISTING ALL NETWORK INTERFACES ===");
 
   // Try to iterate through all available network interfaces
@@ -34,7 +34,7 @@ void list_all_netifs() {
   ESP_LOGI(__FILE__, "=== END NETIF LISTING ===");
 }
 
-static esp_err_t update_ap_sta_ip_info(wifi_info_t *wifi_info) {
+static esp_err_t wifi_update_ap_sta_ip_info(wifi_info_t *wifi_info) {
   esp_netif_t *netif = NULL;
   esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
 
@@ -87,12 +87,12 @@ static esp_err_t update_ap_sta_ip_info(wifi_info_t *wifi_info) {
   return ESP_FAIL;
 }
 
-esp_err_t update_ip_info(wifi_info_t *wifi_info) {
+esp_err_t wifi_update_ip_info(wifi_info_t *wifi_info) {
   ESP_LOGI(__FILE__, "=== IP INFO DEBUG ===");
 
   // First, list all network interfaces for debugging
-  list_all_netifs();
-  if (update_ap_sta_ip_info(wifi_info) == ESP_OK)
+  wifi_list_all_netifs();
+  if (wifi_update_ap_sta_ip_info(wifi_info) == ESP_OK)
     return ESP_OK;
   // If we reach here, we couldn't get IP info through normal methods
   // Try iterating through all interfaces as fallback
