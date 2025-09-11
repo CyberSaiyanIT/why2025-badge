@@ -20,6 +20,7 @@
 #include "admin.h"
 #include "event.h"
 #include "person.h"
+#include "dice.h"
 #include "radar.h"
 #include "rssi.h"
 #include "snake.h"
@@ -76,11 +77,12 @@ void ui_switch_page_up() {
 }
 
 static void ui_init(void) {
-  current_screen = SCREEN_ADMIN;
+  current_screen = SCREEN_DICE;
 
   screens[SCREEN_LOGO]         = ui_screen_splash_init();
   screens[SCREEN_PERSON]       = ui_screen_person_init();
   screens[SCREEN_SOCIALENERGY] = ui_screen_socialenergy_init();
+  screens[SCREEN_DICE]         = ui_screen_dice_init();
   screens[SCREEN_EVENT]        = ui_screen_event_init();
   screens[SCREEN_RADAR]        = ui_screen_radar_init();
   screens[SCREEN_RSSI]         = ui_screen_rssi_init();

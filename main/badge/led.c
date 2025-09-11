@@ -232,8 +232,7 @@ void led_task(void *arg) {
     // Skip normal LED operations if easter egg is active
     if (easter_egg_active) {
       ESP_LOGI(__FILE__, "Easter egg active, skipping normal LED operations");
-      vTaskDelay(1000 /
-                 portTICK_PERIOD_MS);  // Wait 1 second before checking again
+      vTaskDelay(1000 / portTICK_PERIOD_MS);  // Wait 1 second before checking again
       continue;
     }
 

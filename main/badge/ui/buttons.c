@@ -1,13 +1,12 @@
 #include "buttons.h"
 
-
 #include "backlight.h"
 #include "person.h"
+#include "dice.h"
 #include "socialenergy.h"
 #include "admin.h"
 #include "snake.h"
 #include "../led.h"
-
 
 const int nb_screens                     = NUM_SCREENS;
 static uint8_t up_button_press_counter   = 0;
@@ -21,6 +20,7 @@ static screen_buttons_t button_action[] = {
     {NULL, NULL},                                        // LOGO
     {person_button_up, person_button_down},              // PERSON
     {socialenergy_button_up, socialenergy_button_down},  // SOCIALENERGY
+    {dice_button_up, dice_button_down},                  // DICE
     {scroll_up, scroll_down},                            // EVENT
     {NULL, NULL},                                        // RADAR
     {scroll_up, scroll_down},                            // RSSI
@@ -130,7 +130,7 @@ static void buttons_timer(lv_timer_t *arg) {
 }
 
 void buttons_init() {
-  ESP_LOGI(__FILE__, "Starting button task");
+  ESP_LOGI(__FILE__, "Starting button init");
   button_events        = button_init(PIN_BIT(BUTTON_1) | PIN_BIT(BUTTON_2));
   buttons_timer_handle = lv_timer_create(buttons_timer, 100, NULL);
   lv_timer_resume(buttons_timer_handle);

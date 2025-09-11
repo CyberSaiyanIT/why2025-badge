@@ -15,7 +15,6 @@ void app_main() {
   // Init storage
   nvs_init();
   spiffs_init();
-
   // Init event loop
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 

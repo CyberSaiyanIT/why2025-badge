@@ -1,6 +1,8 @@
 #include "event.h"
 #include "cJSON.h"
 #include "../schedule.h"
+#include <lvgl.h>
+#include "../badge.h"
 
 static lv_obj_t *table_event;
 

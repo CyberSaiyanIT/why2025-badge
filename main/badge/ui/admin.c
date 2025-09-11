@@ -11,7 +11,6 @@ static uint8_t admin_state = ADMIN_STATE_OFF;
 
 void ui_update_admin_info() {
   wifi_info_t wifi_info;
-  char admin_info_text[ADMIN_INFO_SIZE];
 
   if (update_ip_info(&wifi_info) != ESP_OK) {
     lv_obj_add_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
@@ -19,21 +18,21 @@ void ui_update_admin_info() {
   }
 
   if (wifi_info.wifi_mode == WIFI_MODE_AP)
-    snprintf(admin_info_text, ADMIN_INFO_SIZE, "SSID: %s\nPassword: %s\nIP: %s\nGateway: %s\nNetmask: %s\n\nConnect to http://%s",
-             badge_obj.ap_ssid, badge_obj.ap_password,
-             wifi_info.ip, wifi_info.gateway, wifi_info.netmask,
-             wifi_info.gateway);
+    lv_label_set_text_fmt(admin_info,
+                          "SSID: %s\nPassword: %s\nIP: %s\nGateway: %s\nNetmask: %s\n\nConnect to http://%s",
+                          badge_obj.ap_ssid, badge_obj.ap_password,
+                          wifi_info.ip, wifi_info.gateway, wifi_info.netmask,
+                          wifi_info.gateway);
   else if (wifi_info.wifi_mode == WIFI_MODE_STA)
-    snprintf(admin_info_text, ADMIN_INFO_SIZE, "SSID: %s\n\nIP: %s\nGateway: %s\nNetmask: %s\n\nConnect to http://%s",
-             badge_obj.sta_ssid,
-             wifi_info.ip, wifi_info.gateway, wifi_info.netmask,
-             wifi_info.gateway);
+    lv_label_set_text_fmt(admin_info,
+                          "SSID: %s\n\nIP: %s\nGateway: %s\nNetmask: %s\n\nConnect to http://%s",
+                          badge_obj.sta_ssid,
+                          wifi_info.ip, wifi_info.gateway, wifi_info.netmask,
+                          wifi_info.gateway);
   else {
     lv_obj_add_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
     return;
   }
-
-  lv_label_set_text(admin_info, admin_info_text);
   lv_obj_clear_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
 }
 
@@ -96,10 +95,7 @@ void ui_force_show_ip_labels() {
 
 void ui_connection_progress(uint8_t cur, uint8_t max) {
   if (cur != max) {
-    char buf[BADGE_BUF_SIZE + 20] = {0};  // Increase the size of buf to accommodate the entire formatted
-                                          // string
-    snprintf(buf, sizeof(buf), "Connecting (%d/%d)", cur, max);
-    lv_label_set_text(admin_switch_sta_text, buf);
+    lv_label_set_text_fmt(admin_switch_sta_text, "Connecting (%d/%d)", cur, max);
     lv_obj_clear_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
   } else {
     lv_label_set_text(admin_switch_sta_text, "Connection failed!");
