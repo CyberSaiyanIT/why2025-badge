@@ -1,11 +1,7 @@
 #include "buttons.h"
 
 #include "backlight.h"
-#include "person.h"
-#include "dice.h"
-#include "socialenergy.h"
-#include "admin.h"
-#include "snake.h"
+#include "config.h"
 #include "../led.h"
 
 const int nb_screens                     = NUM_SCREENS;
@@ -16,17 +12,6 @@ static int8_t counter_screen = -1;  // Initialize to invalid screen index
 static QueueHandle_t button_events;
 lv_timer_t *buttons_timer_handle;
 
-static screen_buttons_t button_action[] = {
-    {NULL, NULL},                                        // LOGO
-    {person_button_up, person_button_down},              // PERSON
-    {socialenergy_button_up, socialenergy_button_down},  // SOCIALENERGY
-    {dice_button_up, dice_button_down},                  // DICE
-    {scroll_up, scroll_down},                            // EVENT
-    {NULL, NULL},                                        // RADAR
-    {scroll_up, scroll_down},                            // RSSI
-    {admin_button_up, admin_button_down},                // ADMIN
-    {snake_button_up, snake_button_down},                // SNAKE
-};
 
 void check_counter() {
   // Check if this is the first button press or if we've changed screens
@@ -62,8 +47,8 @@ void ui_button_up() {
   if (ui_update_backlight(true))
     return;
 
-  if (button_action[current_screen].button_up != NULL)
-    button_action[current_screen].button_up();
+  if (screen_config[current_screen].button_up != NULL)
+    screen_config[current_screen].button_up();
   else
     ESP_LOGI(__FILE__, "Button up, no actions");
 }
@@ -89,8 +74,8 @@ void ui_button_down() {
 
   if (ui_update_backlight(true))
     return;
-  if (button_action[current_screen].button_down != NULL)
-    button_action[current_screen].button_down();
+  if (screen_config[current_screen].button_down != NULL)
+    screen_config[current_screen].button_down();
   else
     ESP_LOGI(__FILE__, "Button down, no actions");
 }

@@ -17,11 +17,6 @@
 #define BUTTON_1 0x08 // DOWN button
 #define BUTTON_2 0x09 // UP button
 
-typedef struct {
-  void (*button_up)();
-  void (*button_down)();
-} screen_buttons_t;
-
 void buttons_init();
 
 void ui_button_up();

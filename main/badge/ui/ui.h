@@ -6,18 +6,7 @@
 
 #include <lvgl.h>
 
-enum screen_order {
-  SCREEN_LOGO,
-  SCREEN_PERSON,
-  SCREEN_SOCIALENERGY,
-  SCREEN_DICE,
-  SCREEN_EVENT,
-  SCREEN_RADAR,
-  SCREEN_RSSI,
-  SCREEN_ADMIN,
-  SCREEN_SNAKE,
-  NUM_SCREENS
-};
+#include "config.h"
 
 #define NAME_LABEL_SIZE 300
 #define SCROLL_UP 80
@@ -26,8 +15,6 @@ enum screen_order {
 extern lv_obj_t *screens[NUM_SCREENS];
 extern int8_t current_screen;
 
-
-void scroll(int dy);
 void scroll_up();
 void scroll_down();
 void ui_switch_page_up();

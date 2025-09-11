@@ -59,6 +59,8 @@
         "event_groups.h": "c",
         "esp_system.h": "c",
         "storage.h": "c",
-        "esp_err.h": "c"
+        "esp_err.h": "c",
+        "buttons.h": "c",
+        "rssi.h": "c"
     }
 }

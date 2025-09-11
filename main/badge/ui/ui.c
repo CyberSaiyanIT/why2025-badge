@@ -49,7 +49,7 @@ void pause_current_timer() {
     lv_timer_pause(radar_timer_handle);
 }
 
-void scroll(int dy) {
+static void scroll(int dy) {
   lv_obj_t *object = lv_obj_get_child(screens[current_screen], 0);
   lv_obj_scroll_by(object, 0, dy, LV_ANIM_ON);
 }
@@ -57,38 +57,27 @@ void scroll(int dy) {
 void scroll_up() { scroll(SCROLL_UP); }
 void scroll_down() { scroll(SCROLL_DOWN); }
 
-void ui_switch_page() {
+static void ui_switch_page(lv_screen_load_anim_t anim_type) {
   ui_update_backlight(true);
-  ESP_LOGI("DISPLAY", "DISPLAY COUNTER: %d/%d", current_screen + 1,
-           NUM_SCREENS);
-  lv_screen_load_anim(screens[current_screen], LV_SCR_LOAD_ANIM_OVER_TOP, 300,
-                      0, false);
+  ESP_LOGI(__FILE__, "DISPLAY COUNTER: %d/%d", current_screen + 1, NUM_SCREENS);
+  lv_screen_load_anim(screens[current_screen], anim_type, 100, 0, false);
   restore_current_timer();
 }
 
 void ui_switch_page_down() {
   current_screen = current_screen + 1 >= NUM_SCREENS ? 0 : current_screen + 1;
-  ui_switch_page();
+  ui_switch_page(LV_SCR_LOAD_ANIM_OVER_BOTTOM);
 }
 
 void ui_switch_page_up() {
   current_screen = current_screen - 1 < 0 ? NUM_SCREENS - 1 : current_screen - 1;
-  ui_switch_page();
+  ui_switch_page(LV_SCR_LOAD_ANIM_OVER_TOP);
 }
 
 static void ui_init(void) {
-  current_screen = SCREEN_DICE;
-
-  screens[SCREEN_LOGO]         = ui_screen_splash_init();
-  screens[SCREEN_PERSON]       = ui_screen_person_init();
-  screens[SCREEN_SOCIALENERGY] = ui_screen_socialenergy_init();
-  screens[SCREEN_DICE]         = ui_screen_dice_init();
-  screens[SCREEN_EVENT]        = ui_screen_event_init();
-  screens[SCREEN_RADAR]        = ui_screen_radar_init();
-  screens[SCREEN_RSSI]         = ui_screen_rssi_init();
-  screens[SCREEN_ADMIN]        = ui_screen_admin_init();
-  screens[SCREEN_SNAKE]        = ui_screen_snake_init();
-
+  current_screen = SCREEN_LOGO;
+  for (uint8_t i=0; i < NUM_SCREENS; i++)
+    screens[i] = screen_config[i].screen_init();
   lv_screen_load(screens[current_screen]);
 }
 
