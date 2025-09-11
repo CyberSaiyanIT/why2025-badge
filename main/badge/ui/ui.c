@@ -68,7 +68,7 @@ void ui_unload_current_screen() {
 static void ui_switch_page(lv_screen_load_anim_t anim_type) {
   ui_backlight_update(true);
   ESP_LOGI(__FILE__, "DISPLAY COUNTER: %d/%d", current_screen + 1, NUM_SCREENS);
-  lv_screen_load_anim(screens[current_screen], anim_type, 100, 0, false);
+  lv_screen_load_anim(screens[current_screen], anim_type, 80, 0, false);
   ui_load_current_screen();
 }
 
@@ -112,6 +112,7 @@ static void ui_init(void) {
   current_screen = FIRST_SCREEN;
   for (uint8_t i = 0; i < NUM_SCREENS; i++)
     screens[i] = screen_config[i].screen_init();
+  ui_load_current_screen();
   lv_screen_load(screens[current_screen]);
 }
 

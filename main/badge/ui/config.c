@@ -17,7 +17,7 @@ screen_config_t screen_config[] = {
         SCREEN_SPLASH,          // ID
         ui_splash_init,         // init
         ui_splash_load,         // load
-        NULL,                   // unload
+        ui_splash_unload,       // unload
         NULL,                   // resume
         NULL,                   // pause
         ui_splash_button_up,    // button up

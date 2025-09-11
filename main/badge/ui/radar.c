@@ -65,7 +65,6 @@ static void ui_radar_timer(lv_timer_t *arg) {
           lv_obj_fade_out(radar_node[i], 1000, 0);
       }
     }
-
     mode = !mode;
   }
 }
@@ -77,6 +76,7 @@ lv_obj_t *ui_radar_init() {
   screen_radar  = lv_obj_create(NULL);
   lv_obj_t *img = lv_img_create(screen_radar);
   lv_img_set_src(img, &img_radar);
+
   lv_obj_align(img, LV_ALIGN_TOP_LEFT, 0, 0);
 
   for (int i = 0; i < sizeof(radar_node) / sizeof(lv_obj_t *); i++) {

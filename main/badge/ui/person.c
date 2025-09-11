@@ -6,7 +6,7 @@ static lv_obj_t *person_name;
 static lv_obj_t *person_organization;
 static lv_obj_t *person_job;
 static lv_obj_t *person_message;
-static lv_obj_t *qr;
+static lv_obj_t *person_qr;
 
 void ui_person_set_secret(bool secret) {
   current_secret   = secret;
@@ -18,19 +18,19 @@ void ui_person_set_secret(bool secret) {
   lv_label_set_text(person_organization, person->organization);
   lv_label_set_text(person_job, person->job);
   lv_label_set_text(person_message, person->message);
-  lv_qrcode_update(qr, person->url, strlen(person->url));
+  lv_qrcode_update(person_qr, person->url, strlen(person->url));
 }
 
 static void ui_person_toggle_secret_event(lv_event_t *event) {
-  lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_flag(person_qr, LV_OBJ_FLAG_HIDDEN);
   ui_person_set_secret(!current_secret);
 }
 
 static void ui_person_qrcode_event(lv_event_t *event) {
-  if (lv_obj_has_flag(qr, LV_OBJ_FLAG_HIDDEN))
-    lv_obj_remove_flag(qr, LV_OBJ_FLAG_HIDDEN);
+  if (lv_obj_has_flag(person_qr, LV_OBJ_FLAG_HIDDEN))
+    lv_obj_remove_flag(person_qr, LV_OBJ_FLAG_HIDDEN);
   else
-    lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(person_qr, LV_OBJ_FLAG_HIDDEN);
 }
 
 static lv_obj_t *ui_person_create_label(lv_obj_t *screen) {
@@ -69,10 +69,10 @@ lv_obj_t *ui_person_init() {
   person_message = ui_person_create_label(screen_person);
   lv_obj_align(person_message, LV_ALIGN_CENTER, 0, 60);
 
-  qr = lv_qrcode_create(screen_person);
-  lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);
-  lv_qrcode_set_size(qr, 200);
-  lv_obj_center(qr);
+  person_qr = lv_qrcode_create(screen_person);
+  lv_obj_add_flag(person_qr, LV_OBJ_FLAG_HIDDEN);
+  lv_qrcode_set_size(person_qr, 200);
+  lv_obj_center(person_qr);
 
   /* Setting styles */
   lv_obj_add_style(person_name, &style_name, LV_PART_MAIN);
@@ -88,7 +88,7 @@ lv_obj_t *ui_person_init() {
 }
 
 void ui_person_load() {
-  lv_obj_add_flag(qr, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_flag(person_qr, LV_OBJ_FLAG_HIDDEN);
   ui_person_set_secret(false);
 }
 void ui_person_button_up() { ui_person_set_secret(true); }
