@@ -9,8 +9,12 @@ static void ui_snake_reset(lv_obj_t *parent);
 const char ui_snake_eyes[][4] = {"' '", ": ", ". .", " :"};
 
 static snake_t snake;
-lv_timer_t *snake_timer_handle;
-lv_obj_t *screen_snake;
+static lv_timer_t *snake_timer_handle;
+static lv_obj_t *screen_snake;
+
+static uint8_t snake_score;
+static uint8_t snake_max_score;
+static lv_obj_t *snake_score_label;
 
 static void ui_snake_set_dir(int8_t dir) {
   dir += snake.dir;
@@ -36,6 +40,11 @@ static void ui_snake_add_body(lv_obj_t *parent) {
 static void ui_snake_reset(lv_obj_t *parent) {
   if (snake_timer_handle)
     lv_timer_pause(snake_timer_handle);
+
+  if (snake_score > snake_max_score)
+    snake_max_score = snake_score;
+  snake_score = 0;
+  lv_label_set_text_fmt(snake_score_label, "%d/%d", snake_score, snake_max_score);
 
   srand(lv_tick_get());
 
@@ -114,6 +123,8 @@ static void ui_snake_timer_handler(lv_timer_t *arg) {
     if (x == lv_obj_get_x(snake.food) && y == lv_obj_get_y(snake.food)) {
       lv_obj_del(snake.food);
       snake.food = NULL;
+      snake_score++;
+      lv_label_set_text_fmt(snake_score_label, "%d/%d", snake_score, snake_max_score);
       ui_snake_add_body(parent);
 
       if (snake.size % SNAKE_STEP_SPEED == 0 && snake.speed > 0) {
@@ -143,9 +154,16 @@ static void ui_snake_timer_handler(lv_timer_t *arg) {
 
 lv_obj_t *ui_screen_snake_init() {
   // page for snake
-  screen_snake = lv_obj_create(NULL);
-  ui_snake_reset(screen_snake);
+  screen_snake    = lv_obj_create(NULL);
+  snake_score     = 0;
+  snake_max_score = 0;
 
+  snake_score_label = lv_label_create(screen_snake);
+  lv_obj_align(snake_score_label, LV_ALIGN_TOP_RIGHT, -5, 5);
+  lv_obj_set_style_opa(snake_score_label, 85, LV_PART_MAIN);
+  lv_obj_set_style_text_font(snake_score_label, &lv_font_montserrat_18, LV_PART_MAIN);
+
+  ui_snake_reset(screen_snake);
   snake_timer_handle = lv_timer_create(ui_snake_timer_handler, 50, NULL);
   lv_timer_pause(snake_timer_handle);
 
