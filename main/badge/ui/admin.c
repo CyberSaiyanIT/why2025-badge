@@ -26,7 +26,7 @@ void ui_admin_update_info() {
     int ap_client_count = wifi_ap_get_client_count();
 
     lv_label_set_text_fmt(admin_info,
-                          "SSID: %s\nPassword: %s\nIP: %s\nGateway: %s\nNetmask: %s\nConnect to\nhttp://%s\n%d WIFI client(s)",
+                          "SSID: %s\nPassword: %s\nIP: %s\nGateway: %s\nNetmask: %s\n\n#E80B60 Visit: http://%s#\n%d WIFI client(s)",
                           badge_obj.ap_ssid, badge_obj.ap_password,
                           wifi_info.ip, wifi_info.gateway, wifi_info.netmask,
                           wifi_info.gateway,
@@ -139,6 +139,7 @@ lv_obj_t *ui_screen_admin_init() {
   lv_obj_center(admin_switch_sta_text);
 
   admin_info = lv_label_create(screen_admin);
+  lv_label_set_recolor(admin_info, true);
   lv_obj_align(admin_info, LV_ALIGN_LEFT_MID, 10, 0);
   lv_obj_add_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
 

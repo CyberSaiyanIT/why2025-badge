@@ -3,10 +3,11 @@
 #define SOCIAL_MIN 0
 #define SOCIAL_MAX 100
 
-static int32_t social_value         = SOCIAL_MAX;
-static lv_obj_t *needle_line        = NULL;
-static lv_obj_t *social_value_label = NULL;
-static lv_obj_t *scale              = NULL;
+static int32_t social_value                = SOCIAL_MAX;
+static lv_obj_t *needle_line               = NULL;
+static lv_obj_t *social_value_label        = NULL;
+static lv_obj_t *social_value_legend_label = NULL;
+static lv_obj_t *scale                     = NULL;
 
 typedef struct {
   lv_style_t items;
@@ -31,7 +32,7 @@ static void ui_socialenergy_init_section_styles(section_styles_t *styles, lv_col
 
   lv_style_init(&styles->main);
   lv_style_set_arc_color(&styles->main, color);
-  lv_style_set_arc_width(&styles->main, 20);
+  lv_style_set_arc_width(&styles->main, 15);
 }
 
 static void ui_socialenergy_add_section(lv_obj_t *target_scale, int32_t from, int32_t to, const section_styles_t *styles) {
@@ -56,7 +57,7 @@ static lv_color_t ui_socialenergy_get_zone_color(int32_t value) {
 static void set_needle(int value) {
   social_value = value;
   /* Update needle */
-  lv_scale_set_line_needle_value(scale, needle_line, -8, social_value);
+  lv_scale_set_line_needle_value(scale, needle_line, -2, social_value);
 
   /* Update text */
   lv_label_set_text_fmt(social_value_label, "%d%%", (int)social_value);
@@ -64,6 +65,7 @@ static void set_needle(int value) {
   /* Update text color based on zone */
   lv_color_t zone_color = ui_socialenergy_get_zone_color(social_value);
   lv_obj_set_style_text_color(social_value_label, zone_color, 0);
+  lv_obj_set_style_text_color(social_value_legend_label, zone_color, 0);
 }
 
 static void ui_socialenergy_needle_step(int step) {
@@ -170,7 +172,7 @@ lv_obj_t *ui_socialenergy_init() {
 
   /* Optional styling */
   lv_obj_set_style_line_color(needle_line, lv_color_black(), LV_PART_MAIN);
-  lv_obj_set_style_line_width(needle_line, 12, LV_PART_MAIN);
+  lv_obj_set_style_line_width(needle_line, 10, LV_PART_MAIN);
   lv_obj_set_style_length(needle_line, 20, LV_PART_MAIN);
   lv_obj_set_style_line_rounded(needle_line, false, LV_PART_MAIN);
   lv_obj_set_style_pad_right(needle_line, 50, LV_PART_MAIN);
@@ -187,6 +189,7 @@ lv_obj_t *ui_socialenergy_init() {
 
   lv_obj_t *container = lv_obj_create(circle);
   lv_obj_center(container);
+  lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_size(container, lv_pct(100), LV_SIZE_CONTENT);
   lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, 0);
   lv_obj_set_style_border_width(container, 0, 0);
@@ -201,6 +204,14 @@ lv_obj_t *ui_socialenergy_init() {
   lv_label_set_text_fmt(social_value_label, "%d%%", SOCIAL_MAX / 2);
   lv_obj_set_style_text_font(social_value_label, &lv_font_montserrat_36, 0);
   lv_obj_set_style_text_align(social_value_label, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_align(social_value_label, LV_ALIGN_TOP_MID, 0, 0);
+
+  social_value_legend_label = lv_label_create(container);
+  lv_obj_clear_flag(social_value_legend_label, LV_OBJ_FLAG_SCROLLABLE);
+  lv_label_set_text(social_value_legend_label, "social energy");
+  lv_obj_set_style_text_font(social_value_legend_label, &lv_font_montserrat_14, 0);
+  lv_obj_set_style_text_align(social_value_legend_label, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_align(social_value_legend_label, LV_ALIGN_BOTTOM_MID, 0, 0);
 
   lv_color_t zone_color = ui_socialenergy_get_zone_color(social_value);
   lv_obj_set_style_text_color(social_value_label, zone_color, 0);
