@@ -14,6 +14,7 @@
 #define ADMIN_STATE_AP 1
 #define ADMIN_STATE_STA 2
 
+void ui_admin_update_info();
 void ui_send_wifi_event(int event);
 void ui_admin_ap_start_event();
 void ui_admin_ap_stop_event();

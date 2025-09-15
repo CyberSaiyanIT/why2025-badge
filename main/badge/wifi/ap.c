@@ -12,10 +12,15 @@
 #include "../badge.h"
 
 esp_timer_handle_t inactivity_timer;
-static int8_t ap_clients_num = 0;
+
+int wifi_ap_get_client_count() {
+  wifi_sta_list_t stations;
+  esp_wifi_ap_get_sta_list(&stations);
+  return stations.num;
+}
 
 static void wifi_ap_inactivity_timer_cb(void* arg) {
-  if (!ap_clients_num) {
+  if (!wifi_ap_get_client_count()) {
     ESP_LOGI(__FILE__, "Inactivity detected");
     wifi_stop_all();
   } else
@@ -27,16 +32,16 @@ static inline void wifi_ap_start_inactivity_timer() { esp_timer_start_once(inact
 static void wifi_ap_staconnected_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*)event_data;
   ESP_LOGI(__FILE__, "station " MACSTR " join, AID=%d", MAC2STR(event->mac), event->aid);
-  ap_clients_num++;
   esp_timer_stop(inactivity_timer);
+  ui_admin_update_info();
 }
 static void wifi_ap_stadisconnected_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*)event_data;
   ESP_LOGI(__FILE__, "station " MACSTR " leave, AID=%d", MAC2STR(event->mac), event->aid);
-  ap_clients_num--;
-  if (ap_clients_num < 0) ap_clients_num = 0;
-  if (!ap_clients_num) wifi_ap_start_inactivity_timer();
+  if (!wifi_ap_get_client_count()) wifi_ap_start_inactivity_timer();
+  ui_admin_update_info();
 }
+
 static void wifi_ap_start_event(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
   ui_admin_ap_start_event();
 }
@@ -90,7 +95,6 @@ void wifi_ap_stop() {
 }
 
 void wifi_ap_init() {
-  ap_clients_num                           = 0;
   const esp_timer_create_args_t timer_args = {
       .callback = &wifi_ap_inactivity_timer_cb,
       .name     = "inactivity-timer"};

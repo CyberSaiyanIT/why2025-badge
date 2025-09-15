@@ -1,29 +1,44 @@
 #include "admin.h"
 #include "../wifi/wifi.h"
+#include "../wifi/ap.h"
 #include "../wifi/info.h"
+#include "../httpd/httpd.h"
 
 #define ADMIN_INFO_SIZE 300
+#define BUFF_SIZE       128
 static lv_obj_t *admin_switch_ap, *admin_switch_sta;
 static lv_obj_t *admin_switch_ap_text, *admin_switch_sta_text;
 static lv_obj_t *admin_info;
+static lv_obj_t *admin_qrcode;
 
 static uint8_t admin_state = ADMIN_STATE_OFF;
 
 void ui_admin_update_info() {
   wifi_info_t wifi_info;
+  char buff[BUFF_SIZE];
 
   if (wifi_update_ip_info(&wifi_info) != ESP_OK) {
     lv_obj_add_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
     return;
   }
 
-  if (wifi_info.wifi_mode == WIFI_MODE_AP)
+  if (wifi_info.wifi_mode == WIFI_MODE_AP) {
+    int ap_client_count = wifi_ap_get_client_count();
+
     lv_label_set_text_fmt(admin_info,
-                          "SSID: %s\nPassword: %s\nIP: %s\nGateway: %s\nNetmask: %s\n\nConnect to http://%s",
+                          "SSID: %s\nPassword: %s\nIP: %s\nGateway: %s\nNetmask: %s\nConnect to\nhttp://%s\n%d WIFI client(s)",
                           badge_obj.ap_ssid, badge_obj.ap_password,
                           wifi_info.ip, wifi_info.gateway, wifi_info.netmask,
-                          wifi_info.gateway);
-  else if (wifi_info.wifi_mode == WIFI_MODE_STA)
+                          wifi_info.gateway,
+                          ap_client_count);
+
+    if (ap_client_count == 0)
+      snprintf(buff, sizeof(buff), "WIFI:S:%s;T:WPA;P:%s;;", badge_obj.ap_ssid, badge_obj.ap_password);
+    else
+      snprintf(buff, sizeof(buff), "Connect to http://%s", wifi_info.gateway);
+    lv_qrcode_update(admin_qrcode, buff, strlen(buff));
+    lv_obj_remove_flag(admin_qrcode, LV_OBJ_FLAG_HIDDEN);
+  } else if (wifi_info.wifi_mode == WIFI_MODE_STA)
     lv_label_set_text_fmt(admin_info,
                           "SSID: %s\n\nIP: %s\nGateway: %s\nNetmask: %s\n\nConnect to http://%s",
                           badge_obj.sta_ssid,
@@ -33,7 +48,7 @@ void ui_admin_update_info() {
     lv_obj_add_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
     return;
   }
-  lv_obj_clear_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_remove_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
 }
 
 void ui_admin_ap_start_event() {
@@ -50,9 +65,10 @@ void ui_admin_ap_start_event() {
 void ui_admin_ap_stop_event() {
   lv_label_set_text(admin_switch_ap_text, "TURN ON AP");
   lv_obj_add_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_add_flag(admin_qrcode, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_remove_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
 
-  lv_obj_clear_state(admin_switch_ap, LV_STATE_PRESSED | LV_STATE_CHECKED);
+  lv_obj_remove_state(admin_switch_ap, LV_STATE_PRESSED | LV_STATE_CHECKED);
   admin_state = ADMIN_STATE_OFF;
 }
 
@@ -88,14 +104,13 @@ void ui_admin_show_ip() {
   ui_admin_update_info();
 }
 
-
 void ui_admin_connection_progress(uint8_t cur, uint8_t max) {
   if (cur != max) {
     lv_label_set_text_fmt(admin_switch_sta_text, "Connecting (%d/%d)", cur, max);
-    lv_obj_clear_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
   } else {
     lv_label_set_text(admin_switch_sta_text, "Connection failed!");
-    lv_obj_clear_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_flag(admin_switch_sta_text, LV_OBJ_FLAG_HIDDEN);
   }
 }
 
@@ -124,8 +139,13 @@ lv_obj_t *ui_screen_admin_init() {
   lv_obj_center(admin_switch_sta_text);
 
   admin_info = lv_label_create(screen_admin);
-  lv_obj_align(admin_info, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_align(admin_info, LV_ALIGN_LEFT_MID, 10, 0);
   lv_obj_add_flag(admin_info, LV_OBJ_FLAG_HIDDEN);
+
+  admin_qrcode = lv_qrcode_create(screen_admin);
+  lv_qrcode_set_size(admin_qrcode, 120);
+  lv_obj_align(admin_qrcode, LV_ALIGN_RIGHT_MID, -10, 0);
+  lv_obj_add_flag(admin_qrcode, LV_OBJ_FLAG_HIDDEN);
 
   return (screen_admin);
 }
@@ -139,7 +159,7 @@ void ui_admin_button_up() {
       break;
     case ADMIN_STATE_AP:  // AP enabled: disable AP
       wifi_stop_all();
-      lv_obj_clear_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_remove_flag(admin_switch_sta, LV_OBJ_FLAG_HIDDEN);
       admin_state = ADMIN_STATE_OFF;
       break;
     case ADMIN_STATE_STA:  // STA connected: manual IP refresh
@@ -157,7 +177,7 @@ void ui_admin_button_down() {
       lv_label_set_text(admin_switch_sta_text, "Started...");
       admin_state = ADMIN_STATE_STA;
       break;
-    case ADMIN_STATE_AP:  // AP enabled: test showing IP labels
+    case ADMIN_STATE_AP:   // AP enabled: test showing IP labels
     case ADMIN_STATE_STA:  // STA mode: test showing IP labels
       ESP_LOGI("UI", "Force show IP labels test (DOWN button in STA mode)");
       ui_admin_show_ip();

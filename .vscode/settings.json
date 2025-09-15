@@ -62,6 +62,8 @@
         "esp_err.h": "c",
         "buttons.h": "c",
         "rssi.h": "c",
-        "config.h": "c"
+        "config.h": "c",
+        "admin.h": "c",
+        "esp_wifi.h": "c"
     }
 }
