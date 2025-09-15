@@ -1,4 +1,6 @@
 #include "bt.h"
+#include "esp_log.h"
+
 
 ble_node_t ble_nodes[MAX_NEARBY_NODE];
 

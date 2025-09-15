@@ -1,6 +1,8 @@
 #include "person.h"
 #include "ui.h"
 
+#include <string.h>
+
 static bool current_secret = false;
 static lv_obj_t *person_name;
 static lv_obj_t *person_organization;

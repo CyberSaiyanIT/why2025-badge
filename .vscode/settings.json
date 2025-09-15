@@ -64,6 +64,7 @@
         "rssi.h": "c",
         "config.h": "c",
         "admin.h": "c",
-        "esp_wifi.h": "c"
+        "esp_wifi.h": "c",
+        "queue.h": "c"
     }
 }

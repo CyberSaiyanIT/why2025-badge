@@ -4,6 +4,8 @@
 #include "hsv.h"
 #include "bt.h"
 
+#include "esp_log.h"
+
 static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3};  // 0: center, 6: top
 static led_strip_handle_t strip;
 static bool easter_egg_active =

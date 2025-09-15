@@ -2,14 +2,10 @@
 #define _DRAGON_H
 
 #include <stdint.h>
-#include "esp_log.h"
-#include "esp_mac.h"
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
+#include <stdbool.h>
 #include "cJSON.h"
+
+
 #define SETTINGS_FILE "/data/settings.json"
 #define DEFAULT_FILE  "/data/default.json"
 

@@ -7,6 +7,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "esp_timer.h"
+#include "esp_mac.h"
 #include "../ui/admin.h"
 
 #include "../badge.h"

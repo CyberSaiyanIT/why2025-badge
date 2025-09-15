@@ -2,6 +2,7 @@
 #include "cJSON.h"
 #include "../schedule.h"
 #include <lvgl.h>
+#include "esp_log.h"
 #include "../badge.h"
 
 static lv_obj_t *table_event;
