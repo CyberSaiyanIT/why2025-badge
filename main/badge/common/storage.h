@@ -9,7 +9,8 @@
 #include "esp_err.h"
 #include "esp_log.h"
 
-void nvs_init();
-void spiffs_init();
+esp_err_t nvs_init();
+esp_err_t spiffs_size();
+esp_err_t spiffs_init();
 
 #endif

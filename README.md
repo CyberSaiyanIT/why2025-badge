@@ -48,20 +48,24 @@ The Cyber Saiyan WHY2025 logo
 
 ### Second screen
 
+A BADGE with a name, an organization, a job and a message... and a secret identity ;-)
+
+### Thrid screen
+
 The Cyber Saiyan Village schedule. Use the 5th screen to update it.
 ![WHY2025 second screen](img/screen-2.jpg)
 
-### Third Screen
+### Fourth Screen
 
 The badge radar, showing nearby badges in a Dragon Ball style.
 ![WHY2025 third screen](img/screen-3.jpg)
 
-### Fourth screen
+### Fifth screen
 
 The badge's list, you can see all the badges around in a table view
 ![WHY2025 fourth screen](img/screen-4.jpg)
 
-### Fifth screen
+### Sixt screen
 
 The Wi-Fi functionalities
 ![WHY2025 fifth screen](img/screen-5.jpg)
@@ -76,7 +80,7 @@ Start the AP mode (move up the Dial Wheel Switch) and connect from your PC/phone
 
 Start the SYNC mode (move down the Dial Wheel Switch) in order to update the Village schedule; the badge connects to WHY2025 open wi-fi to download the updated schedule from Cyber Saiyan website
 
-### Sixt Screen
+### Seventh Screen
 Have fun while playing Snake! 🐍
 ![WHY2025 sixth screen](img/screen-6.jpg)
 
@@ -256,6 +260,9 @@ In the "Project Tasks" view of PIO navigate to:
       * `Build`
       * `Upload`
 
+## Flash Erase 
+After a flash erase, you'll need to upload the firmaware AND upload data files with "pio run -t uploadfs".
+
 # Known Issues
 Check [GitHub issue tracker](https://github.com/CyberSaiyanIT/why2025-badge/issues)
 
@@ -263,7 +270,7 @@ Check [GitHub issue tracker](https://github.com/CyberSaiyanIT/why2025-badge/issu
 
 ## Wi-Fi SSID name lenght limit
 
-The Wi-Fi SSID for connecting to an external Access Point (AP) is limited to **20 characters**.
+The Wi-Fi SSID for connecting to an external Access Point (AP) is limited to **64 characters**.
 
 ## Use a different logo image
 

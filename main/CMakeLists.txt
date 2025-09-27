@@ -44,5 +44,7 @@ endif()
 
 FILE(GLOB_RECURSE app_sources ${CMAKE_SOURCE_DIR}/main/main.c ${CMAKE_SOURCE_DIR}/main/badge/*.*)
 
-idf_component_register(SRCS ${app_sources})
+idf_component_register(
+    REQUIRES esp_driver_i2c    
+    SRCS ${app_sources})
 #spiffs_create_partition_image(storage ${DATA_SRC_DIR} FLASH_IN_PROJECT)
