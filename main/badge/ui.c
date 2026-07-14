@@ -444,7 +444,7 @@ void ui_screen_splash_init(){
     static lv_style_t style;
     lv_style_init(&style);
     lv_style_set_bg_opa(&style, LV_STATE_DEFAULT, LV_OPA_COVER);
-    lv_style_set_bg_color(&style, LV_STATE_DEFAULT, LV_COLOR_MAKE(0x34, 0x3a, 0x40));
+    lv_style_set_bg_color(&style, LV_STATE_DEFAULT, LV_COLOR_MAKE(0xff, 0xff, 0xff));
     lv_obj_add_style(logo, LV_OBJ_PART_MAIN, &style);
 
     screens[SCREEN_LOGO] = screen_logo;
