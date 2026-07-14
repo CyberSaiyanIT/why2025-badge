@@ -552,7 +552,9 @@ void ui_screen_event_init() {
 
     lv_obj_align(table_event, screen_event_page, LV_ALIGN_OUT_TOP_LEFT, 0, 0);
 
-    // Table is filled lazily on first view (ui_prepare_event) to keep boot fast.
+    // Load the full schedule now, during init (before the logo is shown), so
+    // the badge does its heavy loading up front and the UI is responsive after.
+    ui_event_load();
 
     screens[SCREEN_EVENT] = screen_event;
 }
@@ -999,7 +1001,8 @@ void ui_task(void *arg)
     vTaskDelete(NULL);
 }
 
-// Build the event table on first view so boot stays fast.
+// Rebuild the event table if it was marked stale (e.g. after a sync). The
+// schedule is loaded eagerly at boot, so this is normally a no-op.
 static void ui_prepare_current_screen(void)
 {
     if (current_screen == SCREEN_EVENT && !event_loaded) ui_event_load();
