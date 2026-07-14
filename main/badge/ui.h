@@ -53,6 +53,7 @@ void ui_task(void *);
 void button_task(void *arg);
 
 void ui_event_load();
+void ui_schedule_reset();
 void ui_update_ip_info();
 void ui_manual_ip_update();
 void ui_force_show_ip_labels();

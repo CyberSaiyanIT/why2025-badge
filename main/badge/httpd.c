@@ -173,16 +173,26 @@ static esp_err_t system_info_handler(httpd_req_t *req)
 
 static esp_err_t schedule_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "application/json");
-    const char* buf = load_schedule_from_file();
 
-    if(!buf) {
-        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Failed on load_schedule_from_file()");
+    // Stream the file in chunks so handler RAM is bounded regardless of the
+    // schedule size (the file is served verbatim, preserving the JSON wrapper).
+    FILE* fp = fopen(SCHEDULE_FILE, "r");
+    if(!fp) {
+        httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "Cannot open schedule file");
         return ESP_FAIL;
     }
 
-    esp_err_t err = rest_send_response(req, (char*)buf);
-    free((char*)buf);
-    return err;
+    char buf[1024];
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
+        if (httpd_resp_send_chunk(req, buf, n) != ESP_OK) {
+            fclose(fp);
+            return ESP_FAIL;
+        }
+    }
+    fclose(fp);
+    httpd_resp_send_chunk(req, NULL, 0);   // terminate the response
+    return ESP_OK;
 }
 
 static esp_err_t login_handler(httpd_req_t *req, const char* client_data){

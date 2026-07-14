@@ -17,6 +17,7 @@
         "password": "emf"
     },
     "sync": {
+        "url": "https://www.emfcamp.org/schedule/2026.json",
         "path": "a/why2025"
     },
     "display": {

@@ -273,6 +273,16 @@ void badge_init(){
     snprintf(badge_obj.sta_password, SIZEOF(badge_obj.sta_password), "%s", sta_password);
     snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
 
+    // Full sync URL (optional). Falls back to the legacy cybersaiyan.it host
+    // composed from sync.path when "url" is absent.
+    cJSON* sync_url_item = cJSON_GetObjectItem(obj_sync, "url");
+    if (cJSON_IsString(sync_url_item) && sync_url_item->valuestring &&
+        strlen(sync_url_item->valuestring) > 0) {
+        snprintf(badge_obj.sync_url, SYNC_URL_MAX, "%s", sync_url_item->valuestring);
+    } else {
+        snprintf(badge_obj.sync_url, SYNC_URL_MAX, "https://cybersaiyan.it/%s", sync_path);
+    }
+
     // WPA2/WPA3-Enterprise (802.1X) STA settings (optional keys; default to
     // a plain open/PSK network when absent)
     cJSON* sta_ent = cJSON_GetObjectItem(obj_sta, "enterprise");

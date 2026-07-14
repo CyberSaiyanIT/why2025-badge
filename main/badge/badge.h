@@ -26,6 +26,7 @@
 #define BADGE_BUF_SIZE 20
 #define BADGE_NAME_MAX_SIZE 28
 #define SCHEDULE_BUFFER_LEN 10000
+#define SYNC_URL_MAX 160
 
 #define MAX_NEARBY_NODE 16
 #define SIZEOF(a) sizeof(a)/sizeof(*a)
@@ -54,6 +55,7 @@ typedef struct {
     char sta_identity[BADGE_BUF_SIZE];
     char sta_username[BADGE_BUF_SIZE];
     char sync_path[BADGE_BUF_SIZE];
+    char sync_url[SYNC_URL_MAX];
 
     // Display brightness settings
     uint8_t brightness_max;
