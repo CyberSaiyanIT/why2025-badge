@@ -48,6 +48,11 @@ typedef struct {
     char ap_password[BADGE_BUF_SIZE];
     char sta_ssid[BADGE_BUF_SIZE];
     char sta_password[BADGE_BUF_SIZE];
+    // WPA2/WPA3-Enterprise (802.1X) STA credentials. When sta_enterprise is
+    // true, sta_password is used as the EAP password.
+    bool sta_enterprise;
+    char sta_identity[BADGE_BUF_SIZE];
+    char sta_username[BADGE_BUF_SIZE];
     char sync_path[BADGE_BUF_SIZE];
 
     // Display brightness settings

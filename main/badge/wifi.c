@@ -1,6 +1,29 @@
 #include "wifi.h"
+#include "esp_wpa2.h"
 
 static const char *TAG = "WIFI";
+
+// Configure WPA2/WPA3-Enterprise (802.1X) EAP credentials for the STA
+// interface. Must be called after esp_wifi_set_config() and before
+// esp_wifi_start(). Uses PEAP/EAP-TTLS with username+password; server
+// certificate validation is intentionally not enforced (EMF marks it
+// optional), so no CA certificate needs to be embedded.
+static void sta_apply_enterprise(void)
+{
+	const char* identity = strlen(badge_obj.sta_identity) > 0
+		? badge_obj.sta_identity : badge_obj.sta_username;
+
+	ESP_ERROR_CHECK( esp_wifi_sta_wpa2_ent_set_identity(
+		(const unsigned char*)identity, strlen(identity)) );
+	ESP_ERROR_CHECK( esp_wifi_sta_wpa2_ent_set_username(
+		(const unsigned char*)badge_obj.sta_username, strlen(badge_obj.sta_username)) );
+	ESP_ERROR_CHECK( esp_wifi_sta_wpa2_ent_set_password(
+		(const unsigned char*)badge_obj.sta_password, strlen(badge_obj.sta_password)) );
+	ESP_ERROR_CHECK( esp_wifi_sta_wpa2_ent_enable() );
+
+	ESP_LOGI(TAG, "STA WPA-Enterprise enabled (identity:%s username:%s)",
+		identity, badge_obj.sta_username);
+}
 static wifi_mode_t curr_mode = WIFI_MODE_NULL;
 QueueHandle_t wifi_queue;
 
@@ -136,14 +159,22 @@ bool start_wifi_sta()
 
 	wifi_config_t wifi_config = { 0 };
 	snprintf((char*)wifi_config.sta.ssid, SIZEOF(wifi_config.sta.ssid), "%s", STA_WIFI_SSID);
-	
-	// Only set password if it's not empty (for open networks)
-	if (strlen(STA_WIFI_PASSWORD) > 0) {
+
+	if (badge_obj.sta_enterprise) {
+		// WPA2/WPA3-Enterprise: be PMF-capable so we can associate with
+		// WPA3-Enterprise APs; EAP credentials are set after set_config().
+		wifi_config.sta.pmf_cfg.capable = true;
+		wifi_config.sta.pmf_cfg.required = false;
+	} else if (strlen(STA_WIFI_PASSWORD) > 0) {
+		// WPA2-PSK. Leave empty for open networks.
 		snprintf((char*)wifi_config.sta.password, SIZEOF(wifi_config.sta.password), "%s", STA_WIFI_PASSWORD);
 	}
 
 	ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
 	ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config) );
+	if (badge_obj.sta_enterprise) {
+		sta_apply_enterprise();
+	}
     ESP_ERROR_CHECK( esp_wifi_start() );
 	ESP_ERROR_CHECK( esp_wifi_connect() );
 
@@ -189,12 +220,20 @@ bool start_wifi_apsta()
 
 	wifi_config_t sta_config = { 0 };
 	snprintf((char*)sta_config.sta.ssid, SIZEOF(sta_config.sta.ssid), "%s", STA_WIFI_SSID);
-	snprintf((char*)sta_config.sta.password, SIZEOF(sta_config.sta.password), "%s", STA_WIFI_PASSWORD);
+	if (badge_obj.sta_enterprise) {
+		sta_config.sta.pmf_cfg.capable = true;
+		sta_config.sta.pmf_cfg.required = false;
+	} else {
+		snprintf((char*)sta_config.sta.password, SIZEOF(sta_config.sta.password), "%s", STA_WIFI_PASSWORD);
+	}
 
 
 	ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_APSTA) );
 	ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_AP, &ap_config) );
 	ESP_ERROR_CHECK( esp_wifi_set_config(ESP_IF_WIFI_STA, &sta_config) );
+	if (badge_obj.sta_enterprise) {
+		sta_apply_enterprise();
+	}
 	ESP_ERROR_CHECK( esp_wifi_start() );
 	ESP_LOGI(TAG, "WIFI_MODE_AP started. SSID:%s password:%s",
 			 AP_WIFI_SSID, AP_WIFI_PASSWORD);

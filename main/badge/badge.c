@@ -272,6 +272,17 @@ void badge_init(){
     snprintf(badge_obj.sta_ssid, SIZEOF(badge_obj.sta_ssid), "%s", sta_ssid);
     snprintf(badge_obj.sta_password, SIZEOF(badge_obj.sta_password), "%s", sta_password);
     snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
+
+    // WPA2/WPA3-Enterprise (802.1X) STA settings (optional keys; default to
+    // a plain open/PSK network when absent)
+    cJSON* sta_ent = cJSON_GetObjectItem(obj_sta, "enterprise");
+    badge_obj.sta_enterprise = cJSON_IsTrue(sta_ent);
+    cJSON* sta_identity = cJSON_GetObjectItem(obj_sta, "identity");
+    cJSON* sta_username = cJSON_GetObjectItem(obj_sta, "username");
+    snprintf(badge_obj.sta_identity, SIZEOF(badge_obj.sta_identity), "%s",
+             cJSON_IsString(sta_identity) ? sta_identity->valuestring : "");
+    snprintf(badge_obj.sta_username, SIZEOF(badge_obj.sta_username), "%s",
+             cJSON_IsString(sta_username) ? sta_username->valuestring : "");
     
     // Set brightness values
     badge_obj.brightness_max = (uint8_t)brightness_max;

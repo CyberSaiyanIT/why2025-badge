@@ -10,8 +10,11 @@
         "password": ""
     },
     "sta": {
-        "ssid": "WHY2025-open",
-        "password": ""
+        "ssid": "emf",
+        "enterprise": true,
+        "identity": "emf",
+        "username": "emf",
+        "password": "emf"
     },
     "sync": {
         "path": "a/why2025"
