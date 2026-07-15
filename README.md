@@ -1,18 +1,17 @@
-# WHY2025 Badge
+# EMF2026 Badge
 
 
-![WHY2025 badge front](img/WHY2025_badge_front.png)
-![WHY2025 badge rear](img/WHY2025_badge_rear.png)
+![EMF2026 badge front](img/EMF2026_badge_front.png)
+![EMF2026 badge rear](img/EMF2026_badge_rear.png)
 
-The Cyber Saiyan community designed and developed a special gadget to celebrate [WHY2025](https://www.cybersaiyan.it/why2025/)... You can get one of the 200 available badges at the [Cyber Saiyan Village](https://wiki.why2025.org/Village:Cyber_Saiyan) and start playing.
+The Cyber Saiyan community designed and developed a special gadget to bring to [EMF Camp 2026](https://www.emfcamp.org/). Come find the Cyber Saiyan crew at camp to grab one of the badges and start playing.
 
 ## Useful information:
 
 * To play with and hack the badge, we recommend bringing a **USB Type‑C data cable**
-* The badge is already flashed with the WHY2025 specific firmware
+* The badge is already flashed with the EMF2026 specific firmware
 * We would greatly appreciate any improvements to the project and pull requests.
-* Don't hesitate to come and visit us at the Cyber Saiyan Village if you need help
-* **Bonus**: on [Day 2, Aug 9, 2025 at 16:00 in Cassiopeia](https://cfp.why2025.org/why2025/talk/3CSQRF/) we present the hardware design and the firmware during the talk "Summoning Shenron: Building the Cyber Saiyan Badge"
+* Don't hesitate to come and visit the Cyber Saiyan crew at camp if you need help
 
 ## Features
 
@@ -43,46 +42,46 @@ You can interact with the screen by short pressing (up or down) one of the two D
 
 ### First screen
 
-The Cyber Saiyan WHY2025 logo
-![WHY2025 first screen](img/screen-1.jpg)
+The Cyber Saiyan EMF2026 logo
+![EMF2026 first screen](img/screen-1.jpg)
 
 ### Second screen
 
-The Cyber Saiyan Village schedule. Use the 5th screen to update it.
-![WHY2025 second screen](img/screen-2.jpg)
+The EMF Camp 2026 talks schedule. Use the 5th screen to update it.
+![EMF2026 second screen](img/screen-2.jpg)
 
 ### Third Screen
 
 The badge radar, showing nearby badges in a Dragon Ball style.
-![WHY2025 third screen](img/screen-3.jpg)
+![EMF2026 third screen](img/screen-3.jpg)
 
 ### Fourth screen
 
 The badge's list, you can see all the badges around in a table view
-![WHY2025 fourth screen](img/screen-4.jpg)
+![EMF2026 fourth screen](img/screen-4.jpg)
 
 ### Fifth screen
 
 The Wi-Fi functionalities
-![WHY2025 fifth screen](img/screen-5.jpg)
+![EMF2026 fifth screen](img/screen-5.jpg)
 
 #### TURN ON AP
 
 Start the AP mode (move up the Dial Wheel Switch) and connect from your PC/phone to the badge AP using SSID and PASS shown; after that you can navigate to `http://192.168.4.1` in order to explore more functionalities (hey Harry, can you play tetris?) and change configurations (`saiyan` is the pwd)
-![WHY2025 AP screen](img/screen-ap.jpg)
-![WHY2025 webserver](img/webserver.jpg)
+![EMF2026 AP screen](img/screen-ap.jpg)
+![EMF2026 webserver](img/webserver.jpg)
 
 #### SYNC SCHEDULE
 
-Start the SYNC mode (move down the Dial Wheel Switch) in order to update the Village schedule; the badge connects to WHY2025 open wi-fi to download the updated schedule from Cyber Saiyan website
+Start the SYNC mode (move down the Dial Wheel Switch) in order to update the schedule; the badge connects to the EMF Wi-Fi and downloads the latest talks schedule from emfcamp.org
 
 ### Sixt Screen
 Have fun while playing Snake! 🐍
-![WHY2025 sixth screen](img/screen-6.jpg)
+![EMF2026 sixth screen](img/screen-6.jpg)
 
 ## Characteristics
 
-The ESP32-C3 chip is the MCU at the core of the WHY2025 Badge, it integrates multiple peripherals to enable communication with the outside world.
+The ESP32-C3 chip is the MCU at the core of the EMF2026 Badge, it integrates multiple peripherals to enable communication with the outside world.
 The number of available pins is limited to keep the chip package size small. To route all the incoming and outgoing signals a set of software programmable registers controls the pin multiplexer.
 
 ### Peripheral Interfaces
@@ -102,7 +101,7 @@ There are 16 programmable GPIO pins available for:
    * Temperature sensor
 
 ### Devices on board
-The WHY2025 Badge is equipped with a 2.8 inch TFT color LCD screen with 240 x 320 pixels, using the [ST7789](hardware/datasheet/ST7789V.pdf) display controller.
+The EMF2026 Badge is equipped with a 2.8 inch TFT color LCD screen with 240 x 320 pixels, using the [ST7789](hardware/datasheet/ST7789V.pdf) display controller.
 This display integrates a resistive touchscreen a white LEDs backlight and features an 18-pin standard FPC cable to interface the MCU with a 4-wire SPI bus.
 ___
 The SPI bus signals are available on the connector labeled "SPI" at the top of the badge:
@@ -233,16 +232,16 @@ If you get a `No module named pkg_resources` error, open the PlatformIO Core CLI
 ## Build www data (Docker)
 
 * Install docker
-* `docker build --pull --rm -f "Dockerfile" -t why2025badge:latest "."`
-* (Bash) `docker run -it -v $(pwd)/public:/public -v $(pwd)/data/www:/output why2025badge`
-* (Powershell) `docker run -it -v ${PWD}/public:/public -v ${PWD}/data/www:/output why2025badge`
+* `docker build --pull --rm -f "Dockerfile" -t emf2026badge:latest "."`
+* (Bash) `docker run -it -v $(pwd)/public:/public -v $(pwd)/data/www:/output emf2026badge`
+* (Powershell) `docker run -it -v ${PWD}/public:/public -v ${PWD}/data/www:/output emf2026badge`
    
 ## Build/Upload Filesystem
 
 In order to upload the filesystem to the badge you need to plugin the badge using USB.
 In the "Project Tasks" view of PIO navigate to:
 
-* `WHY2025-Bagde`
+* `emf2026-badge`
    * `Platform`
       * `Build Filesystem Image`
       * `Upload Filesystem Image`
@@ -251,7 +250,7 @@ In the "Project Tasks" view of PIO navigate to:
 In order to upload the firmware to the badge you need to plugin the badge using USB.
 In the "Project Tasks" view of PIO navigate to:
 
-* `WHY2025-Bagde`
+* `emf2026-badge`
    * `General`
       * `Build`
       * `Upload`

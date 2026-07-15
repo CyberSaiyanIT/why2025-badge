@@ -40,13 +40,13 @@ build-firmware:
     - "pip install -U platformio"
   script: 
     - pip install -U platformio
-    - platformio run -e rhc22-badge
+    - platformio run -e emf2026-badge
     - cp -r output/ ./data/www/
-    - platformio run --target buildfs --environment rhc22-badge
-    - mv .pio/build/rhc22-badge/firmware.bin firmware.bin
-    - mv .pio/build/rhc22-badge/spiffs.bin spiffs.bin
-    - mv .pio/build/rhc22-badge/partitions.bin partitions.bin
-    - mv .pio/build/rhc22-badge/bootloader.bin bootloader.bin
+    - platformio run --target buildfs --environment emf2026-badge
+    - mv .pio/build/emf2026-badge/firmware.bin firmware.bin
+    - mv .pio/build/emf2026-badge/spiffs.bin spiffs.bin
+    - mv .pio/build/emf2026-badge/partitions.bin partitions.bin
+    - mv .pio/build/emf2026-badge/bootloader.bin bootloader.bin
   artifacts:
     paths:
       - bootloader.bin
