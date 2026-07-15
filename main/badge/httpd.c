@@ -501,6 +501,13 @@ static httpd_handle_t start_webserver(void)
     httpd_handle_t server = NULL;
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
+    // Low free heap in AP mode: serialise bursts of parallel asset requests
+    // (e.g. the tetris page) so peak LWIP memory stays bounded, and give slow
+    // sends time to drain instead of failing immediately (EAGAIN).
+    config.max_open_sockets = 4;
+    config.lru_purge_enable = true;
+    config.recv_wait_timeout = 10;
+    config.send_wait_timeout = 10;
 
     // Start the httpd server
     ESP_LOGI(__FILE__, "Starting server on port: '%d'", config.server_port);

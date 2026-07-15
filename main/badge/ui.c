@@ -34,8 +34,10 @@ static int8_t counter_screen = -1; // Initialize to invalid screen index
 // day-then-time order), then stream-fill the table with every entry placed at
 // its sorted rank. Bounded RAM (no whole-file DOM); the whole list is one
 // scrollable table.
-static uint64_t sched_keys[SCHEDULE_MAX_ROWS];   // key per file-order index
-static uint16_t sched_rank[SCHEDULE_MAX_ROWS];   // file-order index -> sorted rank
+// Allocated (SCHEDULE_MAX_ROWS entries) only while the schedule is loaded, and
+// freed together with the table on ui_event_unload() so AP/STA get the heap.
+static uint64_t *sched_keys = NULL;   // key per file-order index
+static uint16_t *sched_rank = NULL;   // file-order index -> sorted rank
 static int      sched_total = 0;
 static bool     sched_index_valid = false;
 static bool     event_loaded = false;            // table built lazily on first view
@@ -49,6 +51,7 @@ static int cmp_sched_order(const void* a, const void* b) {
 // Forward declarations
 void ui_update_ip_info(void);
 void ui_list_all_netifs(void);
+static void ui_event_unload(void);
 
 void restore_current_task(){
     if(current_screen == SCREEN_RSSI){
@@ -160,6 +163,7 @@ void ui_button_up()
         case SCREEN_ADMIN:
             switch(admin_state){
                 case ADMIN_STATE_OFF: // AP and STA disabled: enable AP
+                    ui_event_unload();   // free schedule table -> heap for AP + web server
                     ui_send_wifi_event(EVENT_HOTSPOT_START);
                     lv_obj_set_hidden(admin_switch_sta, true);
                     admin_state = ADMIN_STATE_AP;
@@ -226,6 +230,7 @@ void ui_button_down()
         case SCREEN_ADMIN:
             switch(admin_state){
                 case ADMIN_STATE_OFF: // AP and STA disabled: enable STA
+                    ui_event_unload();   // free schedule table -> heap for TLS sync
                     ui_send_wifi_event(EVENT_STA_START);
                     lv_label_set_text(admin_switch_sta_text, "Started...");
                     admin_state = ADMIN_STATE_STA;
@@ -296,6 +301,13 @@ static FILE* schedule_open_array(void)
 static void ui_schedule_build_index(void)
 {
     sched_total = 0;
+    if (!sched_keys) sched_keys = malloc(SCHEDULE_MAX_ROWS * sizeof(*sched_keys));
+    if (!sched_rank) sched_rank = malloc(SCHEDULE_MAX_ROWS * sizeof(*sched_rank));
+    if (!sched_keys || !sched_rank) {
+        ESP_LOGE(__FILE__, "Cannot allocate schedule sort index");
+        sched_index_valid = true;   // avoid retry loop; renders as empty
+        return;
+    }
     FILE* fp = schedule_open_array();
     if (!fp) { sched_index_valid = true; return; }
 
@@ -334,10 +346,16 @@ static void ui_schedule_build_index(void)
     }
     fclose(fp);
 
-    static uint16_t order[SCHEDULE_MAX_ROWS];
-    for (int i = 0; i < sched_total; i++) order[i] = (uint16_t)i;
-    qsort(order, sched_total, sizeof(order[0]), cmp_sched_order);
-    for (int i = 0; i < sched_total; i++) sched_rank[order[i]] = (uint16_t)i;
+    // Sort a temporary index array by key, then invert to file-order -> rank.
+    uint16_t *order = malloc(sched_total * sizeof(*order));
+    if (order) {
+        for (int i = 0; i < sched_total; i++) order[i] = (uint16_t)i;
+        qsort(order, sched_total, sizeof(*order), cmp_sched_order);
+        for (int i = 0; i < sched_total; i++) sched_rank[order[i]] = (uint16_t)i;
+        free(order);
+    } else {
+        for (int i = 0; i < sched_total; i++) sched_rank[i] = (uint16_t)i;  // unsorted fallback
+    }
 
     sched_index_valid = true;
     ESP_LOGI(__FILE__, "Schedule index built: %d entries", sched_total);
@@ -350,6 +368,34 @@ void ui_schedule_reset(void)
 {
     sched_index_valid = false;
     event_loaded = false;
+}
+
+// Free the schedule table's cells to reclaim ~50 KB of heap for Wi-Fi (AP web
+// server / TLS sync). The table is rebuilt lazily the next time the event
+// screen is opened (ui_prepare_current_screen). Only called while the event
+// screen is inactive (from the admin screen), so freeing it is safe.
+static void ui_event_unload(void)
+{
+    if (!event_loaded) return;
+
+    // NOTE: lv_table_set_row_cnt(t, 0) frees only the cell-pointer array, not
+    // the per-cell strings (LVGL v7) -> it would leak ~30 KB every cycle.
+    // Clear each cell first: set_cell_value("") realloc-shrinks and frees the
+    // old string, then collapse the table.
+    uint16_t rows = lv_table_get_row_cnt(table_event);
+    uint16_t cols = lv_table_get_col_cnt(table_event);
+    for (uint16_t r = 0; r < rows; r++)
+        for (uint16_t c = 0; c < cols; c++)
+            lv_table_set_cell_value(table_event, r, c, "");
+    lv_table_set_row_cnt(table_event, 0);
+
+    // Also free the sort index; it is rebuilt with the table on next view.
+    free(sched_keys); sched_keys = NULL;
+    free(sched_rank); sched_rank = NULL;
+    sched_index_valid = false;
+
+    event_loaded = false;
+    ESP_LOGI(__FILE__, "Freed event table; free_heap=%lu", esp_get_free_heap_size());
 }
 
 // Load the whole schedule into table_event in sorted (day-then-time) order, as
