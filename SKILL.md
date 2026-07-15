@@ -233,8 +233,8 @@ Event-specific config/branding lives in:
 
 The WHY2025→EMF2026 rename is done (commit 37be85b): build env is now
 `emf2026-badge` (+ `sdkconfig.emf2026-badge`), README/CI/photos updated. Left
-intentionally: the real GitHub repo URL `CyberSaiyanIT/why2025-badge`, the unused
-`sync.path` fallback, and the KiCad `WHY_LOGO` footprint.
+intentionally: the real GitHub repo URL `CyberSaiyanIT/why2025-badge` and the
+KiCad `WHY_LOGO` footprint.
 
 ## Build & flash (PlatformIO + ESP-IDF)
 
