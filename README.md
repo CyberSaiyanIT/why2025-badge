@@ -80,10 +80,10 @@ Have fun while playing Snake! 🐍
 ![EMF2026 sixth screen](img/screen-6.jpg)
 
 ### Seventh Screen
-Space Invaders! 👾 Use the two Dial Wheel Switches to move the laser cannon left
-and right — it auto-fires — and blast the descending invaders. Your score and the
-all-time high score (saved on the badge) are shown at the top. Short-press a wheel
-to play again after game over.
+Space Invaders! 👾 Roll a Dial Wheel **UP to move the laser cannon left** and
+**DOWN to move it right**, and press **both wheels together to FIRE** at the
+descending invaders. Your score and the all-time high score (saved on the badge)
+are shown at the top. Short-press a wheel to play again after game over.
 
 ## Characteristics
 

@@ -17,12 +17,13 @@ typedef struct {
     bool      alive[INV_COUNT];
     int       alive_count;
     int       block_x, block_y;      // top-left of the invader block (px)
+    int       cannon_y;              // ship row (computed from screen height)
     int8_t    dir;                   // +1 right, -1 left
     lv_obj_t *bullet;                // single player shot (NULL = none)
     lv_obj_t *bombs[MAX_BOMBS];      // enemy bombs
     int       score;
     uint32_t  high;
-    lv_obj_t *lbl_score, *lbl_high, *lbl_msg;
+    lv_obj_t *lbl_score, *lbl_high, *lbl_msg, *msg_bg;
     bool      over;
     int       move_ctr;              // ticks since last invader jump
     int       speed;                 // ticks between invader jumps
@@ -32,7 +33,7 @@ static inv_game_t g;
 
 // ---- styles (init once) ----
 static bool styles_done = false;
-static lv_style_t st_inv, st_cannon, st_bullet, st_bomb;
+static lv_style_t st_inv, st_cannon, st_bullet, st_bomb, st_msgbg;
 
 static void style_rect(lv_style_t *s, lv_color_t col)
 {
@@ -48,9 +49,12 @@ static void init_styles(void)
     if (styles_done) return;
     styles_done = true;
     style_rect(&st_inv,    LV_COLOR_LIME);
-    style_rect(&st_cannon, LV_COLOR_CYAN);
+    style_rect(&st_cannon, LV_COLOR_BLUE);
     style_rect(&st_bullet, LV_COLOR_YELLOW);
     style_rect(&st_bomb,   LV_COLOR_RED);
+    style_rect(&st_msgbg,  LV_COLOR_BLACK);
+    lv_style_set_border_width(&st_msgbg, LV_STATE_DEFAULT, 2);
+    lv_style_set_border_color(&st_msgbg, LV_STATE_DEFAULT, LV_COLOR_WHITE);
 }
 
 // ---- helpers ----
@@ -126,7 +130,15 @@ static void game_over(void)
     lv_label_set_text_fmt(g.lbl_msg, "GAME OVER\nSCORE %d\nHIGH %u\n\npress a wheel\nto play again",
                           g.score, (unsigned)g.high);
     lv_obj_set_hidden(g.lbl_msg, false);
+    // size the black panel to wrap the (now measured) label, center both,
+    // and draw them on top of the invaders (bg first, then the text over it)
+    lv_obj_set_size(g.msg_bg, lv_obj_get_width(g.lbl_msg) + 24,
+                              lv_obj_get_height(g.lbl_msg) + 20);
+    lv_obj_set_hidden(g.msg_bg, false);
+    lv_obj_align(g.msg_bg, NULL, LV_ALIGN_CENTER, 0, 0);
     lv_obj_align(g.lbl_msg, NULL, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_move_foreground(g.msg_bg);
+    lv_obj_move_foreground(g.lbl_msg);
 }
 
 // ---- public API ----
@@ -150,14 +162,19 @@ void invaders_reset(lv_obj_t *parent)
     lv_obj_set_style_local_text_color(g.lbl_high, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_YELLOW);
     lv_obj_align(g.lbl_high, NULL, LV_ALIGN_IN_TOP_RIGHT, -4, 4);
 
+    // black panel behind the game-over text (sized in game_over) + the label
+    g.msg_bg = make_rect(parent, &st_msgbg, 10, 10);
+    lv_obj_set_hidden(g.msg_bg, true);
+
     g.lbl_msg = lv_label_create(parent, NULL);
     lv_obj_set_style_local_text_color(g.lbl_msg, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
     lv_label_set_align(g.lbl_msg, LV_LABEL_ALIGN_CENTER);
     lv_obj_set_hidden(g.lbl_msg, true);
 
-    // cannon
+    // cannon (ship) on the bottom row — Y derived from the real screen height
+    g.cannon_y = LV_VER_RES - CANNON_H - 4;
     g.cannon = make_rect(parent, &st_cannon, CANNON_W, CANNON_H);
-    lv_obj_set_pos(g.cannon, (LV_HOR_RES - CANNON_W) / 2, CANNON_Y);
+    lv_obj_set_pos(g.cannon, (LV_HOR_RES - CANNON_W) / 2, g.cannon_y);
 
     // invaders
     for (int i = 0; i < INV_COUNT; i++)
@@ -184,6 +201,13 @@ void invaders_move_cannon(int8_t dir)
     if (x < 0) x = 0;
     if (x > LV_HOR_RES - CANNON_W) x = LV_HOR_RES - CANNON_W;
     lv_obj_set_pos(g.cannon, x, lv_obj_get_y(g.cannon));
+}
+
+void invaders_fire(void)
+{
+    if (g.over || !g.cannon || g.bullet) return;   // one shot on screen at a time
+    g.bullet = make_rect(screen_invaders, &st_bullet, BULLET_W, BULLET_H);
+    lv_obj_set_pos(g.bullet, lv_obj_get_x(g.cannon) + CANNON_W / 2 - BULLET_W / 2, g.cannon_y - BULLET_H);
 }
 
 void invaders_task(lv_task_t *arg)
@@ -215,11 +239,7 @@ void invaders_task(lv_task_t *arg)
             }
         }
     }
-    // auto-fire: keep exactly one shot in flight
-    if (!g.bullet) {
-        g.bullet = make_rect(screen_invaders, &st_bullet, BULLET_W, BULLET_H);
-        lv_obj_set_pos(g.bullet, lv_obj_get_x(g.cannon) + CANNON_W / 2 - BULLET_W / 2, CANNON_Y - BULLET_H);
-    }
+    // (no auto-fire: shots are fired manually via invaders_fire())
 
     // 2) invader block: jump every g.speed ticks
     if (++g.move_ctr >= g.speed) {
@@ -235,7 +255,7 @@ void invaders_task(lv_task_t *arg)
 
         // reached the cannon line? -> lose
         for (int i = 0; i < INV_COUNT; i++)
-            if (g.alive[i] && inv_y(i) + INV_SIZE >= CANNON_Y) { game_over(); return; }
+            if (g.alive[i] && inv_y(i) + INV_SIZE >= g.cannon_y) { game_over(); return; }
 
         // occasionally drop a bomb from a random alive invader
         if (g.alive_count > 0 && (rand() % BOMB_CHANCE) == 0) {

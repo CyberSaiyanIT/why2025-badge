@@ -19,10 +19,12 @@
 #define INV_DROP       14          // vertical drop when hitting an edge
 #define INV_MARGIN     6           // side margin the block bounces within
 
-// --- cannon ---
-#define CANNON_W       24
-#define CANNON_H       10
-#define CANNON_Y       300         // near the bottom (screen is 320 tall)
+// --- cannon (the "ship", on the bottom row) ---
+// NOTE: the LVGL coordinate space here is 320 wide x 240 tall (LV_HOR_RES x
+// LV_VER_RES). The ship's Y is computed at runtime from LV_VER_RES, so it works
+// regardless of resolution/orientation.
+#define CANNON_W       30
+#define CANNON_H       14
 #define CANNON_STEP    12          // move per wheel press
 
 // --- shots ---
@@ -43,5 +45,6 @@
 void invaders_reset(lv_obj_t *parent);   // (re)start a fresh game
 void invaders_task(lv_task_t *arg);       // per-tick game step
 void invaders_move_cannon(int8_t dir);    // -1 = left, +1 = right (wheel press)
+void invaders_fire(void);                 // fire a shot (both-wheel press)
 
 #endif // _INVADERS_H

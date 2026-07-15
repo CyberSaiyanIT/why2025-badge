@@ -161,7 +161,7 @@ void ui_button_up()
             snake_set_dir(1);
             break;
         case SCREEN_INVADERS:
-            invaders_move_cannon(-1);   // left wheel -> move cannon left
+            invaders_move_cannon(-1);   // UP -> move cannon left
             break;
         case SCREEN_ADMIN:
             switch(admin_state){
@@ -231,7 +231,7 @@ void ui_button_down()
             snake_set_dir(-1);
             break;
         case SCREEN_INVADERS:
-            invaders_move_cannon(1);    // right wheel -> move cannon right
+            invaders_move_cannon(1);    // DOWN -> move cannon right
             break;
         case SCREEN_ADMIN:
             switch(admin_state){
@@ -1139,11 +1139,30 @@ void button_task(void *arg)
     static QueueHandle_t button_events;
     button_events = button_init(PIN_BIT(BUTTON_1) | PIN_BIT(BUTTON_2));
 
+    static bool down_state[2] = {false, false};   // pressed state of each wheel
+    static bool fire_chord[2] = {false, false};   // this press was part of a FIRE chord
+
     while (true)
     {
         if (xQueueReceive(button_events, &curr_ev, 1000 / portTICK_PERIOD_MS))
         {
             uint8_t btn_id = curr_ev.pin - 0x08;
+
+            // Track press/release; UP and DOWN held together = FIRE (invaders).
+            if (curr_ev.event == BUTTON_DOWN)
+            {
+                down_state[btn_id] = true;
+                if (down_state[0] && down_state[1] && current_screen == SCREEN_INVADERS)
+                {
+                    invaders_fire();
+                    fire_chord[0] = fire_chord[1] = true;   // suppress the move on release
+                }
+            }
+            else if (curr_ev.event == BUTTON_UP)
+            {
+                down_state[btn_id] = false;
+            }
+
             if (curr_ev.event == BUTTON_HELD)
             {
                 set_screen_led_backlight(badge_obj.brightness_mid);
@@ -1156,7 +1175,8 @@ void button_task(void *arg)
                 }
                 else if ((prev_ev[btn_id].event == BUTTON_DOWN) && (curr_ev.event == BUTTON_UP))
                 {
-                    ui_button_down();
+                    if (fire_chord[btn_id]) fire_chord[btn_id] = false;   // was a fire chord, no move
+                    else ui_button_down();
                 }
             }
 
@@ -1168,7 +1188,8 @@ void button_task(void *arg)
                 }
                 else if ((prev_ev[btn_id].event == BUTTON_DOWN) && (curr_ev.event == BUTTON_UP))
                 {
-                    ui_button_up();
+                    if (fire_chord[btn_id]) fire_chord[btn_id] = false;
+                    else ui_button_up();
                 }
             }
             prev_ev[btn_id] = curr_ev;
