@@ -1,7 +1,7 @@
 #include "ui.h"
 #include "led.h"
 
-enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, NUM_SCREENS};
+enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, SCREEN_INVADERS, NUM_SCREENS};
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
 
@@ -160,6 +160,9 @@ void ui_button_up()
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(1);
             break;
+        case SCREEN_INVADERS:
+            invaders_move_cannon(-1);   // UP -> move cannon left
+            break;
         case SCREEN_ADMIN:
             switch(admin_state){
                 case ADMIN_STATE_OFF: // AP and STA disabled: enable AP
@@ -226,6 +229,9 @@ void ui_button_down()
         case SCREEN_SNAKE:
             lv_task_set_prio(snake_task_handle, LV_TASK_PRIO_LOW);
             snake_set_dir(-1);
+            break;
+        case SCREEN_INVADERS:
+            invaders_move_cannon(1);    // DOWN -> move cannon right
             break;
         case SCREEN_ADMIN:
             switch(admin_state){
@@ -759,6 +765,16 @@ void ui_screen_snake_init(){
     screens[SCREEN_SNAKE] = screen_snake;
 }
 
+void ui_screen_invaders_init(){
+    // page for space invaders (black "space" background)
+    screen_invaders = lv_obj_create(NULL, NULL);
+    lv_obj_set_style_local_bg_color(screen_invaders, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+    lv_obj_set_style_local_bg_opa(screen_invaders, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_COVER);
+    invaders_reset(screen_invaders);
+
+    screens[SCREEN_INVADERS] = screen_invaders;
+}
+
 void ui_ap_start_handler() {
     ap_started = true;
 
@@ -997,10 +1013,13 @@ static void ui_init(void)
     ui_screen_admin_init();
 
     ui_screen_snake_init();
-    
+
+    ui_screen_invaders_init();
+
     radar_task_handle = lv_task_create(ui_radar_task, 2000, LV_TASK_PRIO_OFF, NULL);
     rssi_task_handle = lv_task_create(ui_rssi_task, 2000, LV_TASK_PRIO_OFF, NULL);
     snake_task_handle = lv_task_create(snake_task, 50, LV_TASK_PRIO_OFF, NULL);
+    invaders_task_handle = lv_task_create(invaders_task, INVADERS_TICK_MS, LV_TASK_PRIO_OFF, NULL);
 
     // show first page.
     lv_scr_load(screens[current_screen]);
@@ -1071,10 +1090,18 @@ void ui_task(void *arg)
 }
 
 // Rebuild the event table if it was marked stale (e.g. after a sync). The
-// schedule is loaded eagerly at boot, so this is normally a no-op.
+// schedule is loaded eagerly at boot, so this is normally a no-op. Also start a
+// fresh Space Invaders game (and enable its task) on entry, and stop the game
+// task when leaving that screen.
 static void ui_prepare_current_screen(void)
 {
     if (current_screen == SCREEN_EVENT && !event_loaded) ui_event_load();
+
+    if (current_screen == SCREEN_INVADERS) {
+        invaders_reset(screen_invaders);   // fresh game; also enables the task
+    } else if (invaders_task_handle) {
+        lv_task_set_prio(invaders_task_handle, LV_TASK_PRIO_OFF);
+    }
 }
 
 void ui_switch_page_down()
@@ -1112,11 +1139,30 @@ void button_task(void *arg)
     static QueueHandle_t button_events;
     button_events = button_init(PIN_BIT(BUTTON_1) | PIN_BIT(BUTTON_2));
 
+    static bool down_state[2] = {false, false};   // pressed state of each wheel
+    static bool fire_chord[2] = {false, false};   // this press was part of a FIRE chord
+
     while (true)
     {
         if (xQueueReceive(button_events, &curr_ev, 1000 / portTICK_PERIOD_MS))
         {
             uint8_t btn_id = curr_ev.pin - 0x08;
+
+            // Track press/release; UP and DOWN held together = FIRE (invaders).
+            if (curr_ev.event == BUTTON_DOWN)
+            {
+                down_state[btn_id] = true;
+                if (down_state[0] && down_state[1] && current_screen == SCREEN_INVADERS)
+                {
+                    invaders_fire();
+                    fire_chord[0] = fire_chord[1] = true;   // suppress the move on release
+                }
+            }
+            else if (curr_ev.event == BUTTON_UP)
+            {
+                down_state[btn_id] = false;
+            }
+
             if (curr_ev.event == BUTTON_HELD)
             {
                 set_screen_led_backlight(badge_obj.brightness_mid);
@@ -1129,7 +1175,8 @@ void button_task(void *arg)
                 }
                 else if ((prev_ev[btn_id].event == BUTTON_DOWN) && (curr_ev.event == BUTTON_UP))
                 {
-                    ui_button_down();
+                    if (fire_chord[btn_id]) fire_chord[btn_id] = false;   // was a fire chord, no move
+                    else ui_button_down();
                 }
             }
 
@@ -1141,7 +1188,8 @@ void button_task(void *arg)
                 }
                 else if ((prev_ev[btn_id].event == BUTTON_DOWN) && (curr_ev.event == BUTTON_UP))
                 {
-                    ui_button_up();
+                    if (fire_chord[btn_id]) fire_chord[btn_id] = false;
+                    else ui_button_up();
                 }
             }
             prev_ev[btn_id] = curr_ev;
