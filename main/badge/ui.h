@@ -22,6 +22,7 @@
 
 #include "badge.h"
 #include "snake.h"
+#include "invaders.h"
 
 // Brightness constants - now configured via default.json
 // Legacy values: SCREEN_BRIGHT_MAX=96, SCREEN_BRIGHT_MID=32, SCREEN_BRIGHT_OFF=0
@@ -43,8 +44,10 @@ lv_obj_t *screen_radar; // page 2
 lv_obj_t *screen_rssi;  // page 3
 lv_obj_t *screen_snake; // page 4
 lv_obj_t *screen_admin; // page 5
+lv_obj_t *screen_invaders; // page 6
 
 lv_task_t* snake_task_handle;
+lv_task_t* invaders_task_handle;
 lv_task_t* radar_task_handle;
 lv_task_t* rssi_task_handle;
 lv_task_t* backlight_task_handle;

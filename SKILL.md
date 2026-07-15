@@ -79,8 +79,11 @@ Long-press either dial to switch screens; short-press to interact.
 1. `screen_event` — event schedule (from `schedule.json`)
 2. `screen_radar` — Dragon Ball–style radar of nearby badges
 3. `screen_rssi` — table list of nearby badges + RSSI
-4. `screen_snake` — Snake game (`badge/snake.c`)
-5. `screen_admin` — Wi-Fi admin: AP mode (up) / schedule SYNC (down)
+4. `screen_admin` — Wi-Fi admin: AP mode (up) / schedule SYNC (down)
+5. `screen_snake` — Snake game (`badge/snake.c`)
+6. `screen_invaders` — Space Invaders (`badge/invaders.c`): wheels move the
+   cannon (auto-fire), high score in NVS. `invaders_task` runs only on this
+   screen (prio driven by `ui_prepare_current_screen`, reset on entry).
 
 Backlight auto-dims: `BRIGHT_MID_TIMEOUT_MS` 5s → mid, `BRIGHT_OFF_TIMEOUT_MS`
 15s → off.

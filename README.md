@@ -79,6 +79,12 @@ Start the SYNC mode (move down the Dial Wheel Switch) in order to update the sch
 Have fun while playing Snake! 🐍
 ![EMF2026 sixth screen](img/screen-6.jpg)
 
+### Seventh Screen
+Space Invaders! 👾 Use the two Dial Wheel Switches to move the laser cannon left
+and right — it auto-fires — and blast the descending invaders. Your score and the
+all-time high score (saved on the badge) are shown at the top. Short-press a wheel
+to play again after game over.
+
 ## Characteristics
 
 The ESP32-C3 chip is the MCU at the core of the EMF2026 Badge, it integrates multiple peripherals to enable communication with the outside world.
