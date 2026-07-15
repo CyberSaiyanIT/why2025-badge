@@ -15,7 +15,7 @@ The Cyber Saiyan community designed and developed a special gadget to bring to [
 
 ## Features
 
-The badge has several simple features to enhance your Village experience:
+The badge has several simple features to enhance your camp experience:
 * It is designed to recall the dragon spheres (maybe you will be able to summon Shenron...)
 * The core is a low-power **ESP32-C3** SoC
    * Integrates a 32-bit single-core RISC-V microcontroller with a maximum clock speed of 160 MHz
@@ -194,6 +194,16 @@ The power lines are available on the connector labeled "POW" at the top of the b
 ___
 
 The battery is charged using a [TP4054](hardware/datasheet/TP4054.pdf) single-charge LiPo charger with a constant current/voltage algorithm and a [DW01](hardware/datasheet/dw01a.pdf) protection IC designed to protect the battery from damage due to over-discharge and/or over-current. The charging circuit and voltage regulators are always powered by the USB port. A toggle switch for turning the badge on and off via the battery is located on the bottom of the badge.
+
+# Firmware architecture
+
+For a detailed reference of the firmware — boot flow, FreeRTOS tasks, screens,
+BLE / Wi-Fi, the streaming schedule-sync pipeline, config & storage, the
+build/flash workflow and the non-obvious gotchas — see **[SKILL.md](SKILL.md)**.
+
+It is written as a [Claude Code](https://www.claude.com/product/claude-code)
+skill: copy it to `.claude/skills/badge-architecture/SKILL.md` in your clone and
+Claude Code will load it automatically when you work on the badge.
 
 # Toolchain setup
 

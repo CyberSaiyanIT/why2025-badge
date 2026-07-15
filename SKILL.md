@@ -1,0 +1,274 @@
+---
+name: badge-architecture
+description: >-
+  Architecture and orientation reference for the Cyber Saiyan conference badge
+  (ESP32-C3, Dragon Ball themed). Load this when working on the badge firmware,
+  hardware, web UI, or when adapting the WHY2025 badge for a new event (e.g.
+  EMF2026): explains the boot flow, FreeRTOS tasks, screens, config, BLE/Wi-Fi,
+  build/flash workflow, and exactly where event-specific branding lives.
+---
+
+# Cyber Saiyan Badge Architecture
+
+A Dragon Ball–themed electronic conference badge. Originally built for the
+**WHY2025** hacker camp; **adapted for EMF2026** (Electromagnetic Field) on the
+`EMF2026` branch. Repo holds both the firmware (C, ESP-IDF) and the hardware
+design (KiCad). **LVGL is v7** here (lv_page, lv_task_t,
+`lv_obj_get_child(o,NULL)`), not v8 — matters for any UI work.
+
+## Hardware
+
+- **MCU**: ESP32-C3 — single-core 32-bit RISC-V @ 160 MHz, 400 KB RAM, 4 MB
+  flash, Wi-Fi + BLE 5 (LE). 16 programmable GPIOs.
+- **Display**: 2.8" TFT 240×320, ST7789V controller over 4-wire SPI. Has a
+  resistive touch controller (TSC2007, I2C) that the firmware does **not** use.
+- **Backlight**: driven by the AW9523B I2C LED driver / GPIO expander.
+- **LEDs**: 7× WS2812B addressable RGB on the front (the "dragon spheres"),
+  single-wire NZR protocol; DOUT of last LED exposed on the "1W" pin.
+- **Input**: 2× dial-wheel switches (rotate up/down, short & long press). Center
+  press left = UP, center press right = DOWN.
+- **Power**: LiPo + TP4054 charger + DW01 protection; MT3608 boost (5V for
+  WS2812), MT3410LB step-down 3.3V (removable, swap to RT9080 LDO for low-noise).
+- **KiCad design**: `hardware/dragon_4L_R02/` (`.kicad_pcb`, `.kicad_sch`,
+  `.kicad_pro`). Datasheets in `hardware/datasheet/`. Production files in
+  `hardware/production/`.
+
+## Firmware layout (`main/`)
+
+`main.c` → `app_main()` initializes storage/settings then spawns FreeRTOS tasks
+pinned across the two logical cores:
+
+| Task            | Priority/Core | Responsibility                                   | File                 |
+|-----------------|---------------|--------------------------------------------------|----------------------|
+| `badge_init()`  | (init)        | NVS + SPIFFS init, load settings JSON, assign ID | `badge/badge.c`      |
+| `led_init()`    | (init)        | WS2812B RMT setup                                | `badge/led.c`        |
+| `bt_task`       | 6 / core 0    | BLE advertise + scan for nearby badges (raw HCI) | `badge/bt.c`         |
+| `wifi_task`     | 5 / core 0    | AP/STA state machine via `wifi_queue`            | `badge/wifi.c`       |
+| `ui_task`       | 0 / core 1    | LVGL v7 UI, 6 screens                            | `badge/ui.c`         |
+| `led_task`      | 10 / core 1   | Dragon-sphere animations + easter eggs           | `badge/led.c`        |
+| `button_task`   | 1 / core 0    | dial-wheel input handling                        | `badge/ui.c`         |
+| HTTP server     | event-driven  | web UI on AP at `192.168.4.1`                    | `badge/httpd.c`      |
+
+The HTTP server is started/stopped by IP/Wi-Fi event handlers registered in
+`main.c` (`connect_handler` / `disconnect_handler`).
+
+### Core data structures (`badge/badge.h`)
+
+- `badge_obj_t badge_obj` — the global badge state: MAC, `short_mac`,
+  `device_id` (1–7), device_name, web_login, AP/STA SSID+password, STA
+  enterprise creds, `sync_url`, display brightness (max/mid/off), and an
+  `update()` fn ptr.
+- `ble_node_t ble_nodes[MAX_NEARBY_NODE]` (16) — nearby badges seen over BLE
+  (name, id, rssi, last_found, active).
+- `check_ble_set()` returns true when all 7 badge IDs are present (0x7F) — the
+  "summon Shenron" condition.
+
+### Screens (`badge/ui.h`)
+
+Long-press either dial to switch screens; short-press to interact.
+
+0. `screen_logo` — Cyber Saiyan logo
+1. `screen_event` — event schedule (from `schedule.json`)
+2. `screen_radar` — Dragon Ball–style radar of nearby badges
+3. `screen_rssi` — table list of nearby badges + RSSI
+4. `screen_snake` — Snake game (`badge/snake.c`)
+5. `screen_admin` — Wi-Fi admin: AP mode (up) / schedule SYNC (down)
+
+Backlight auto-dims: `BRIGHT_MID_TIMEOUT_MS` 5s → mid, `BRIGHT_OFF_TIMEOUT_MS`
+15s → off.
+
+## Configuration & storage
+
+- `common/storage.c` — NVS + SPIFFS init.
+- First boot: `data/default.json` is loaded and copied to
+  `/data/settings.json` (SPIFFS). A random `device_id` 1–7 is generated
+  (`generate_id`, uses `esp_random`). Name/AP SSID derived from MAC:
+  `Saiyan-%04x`, AP password from MAC bytes.
+- Subsequent boots read `/data/settings.json`.
+- Settings can be edited at runtime via the web UI (`update_attribute` in
+  `badge.c`, ids 0–3: web login, AP ssid, AP pass, device name).
+
+### `data/default.json` keys (EMF2026 state)
+
+```json
+{ "badge": {"name": ""},
+  "web":   {"login": "saiyan"},
+  "ap":    {"ssid": "", "password": ""},
+  "sta":   {"ssid": "emf", "enterprise": true,
+            "identity": "emf", "username": "emf", "password": "emf"},
+  "sync":  {"url": "https://www.emfcamp.org/schedule/2026.json"},
+  "display": {"brightness_max": 205, "brightness_mid": 128, "brightness_off": 0} }
+```
+
+EMF fields (loaded in `badge.c badge_init`, guarded for absence):
+`sta.enterprise/identity/username` (WPA-Enterprise) and `sync.url`
+(`badge_obj.sync_url[160]`, used verbatim — the old `sync.path` + cybersaiyan.it
+fallback was removed).
+
+## Schedule sync (`badge/sync.c`, `badge/schedule_parse.c`)
+
+On SYNC (screen 5, dial down): connect STA to `sta.ssid` (the camp Wi-Fi), then
+HTTP GET `badge_obj.sync_url` (default `https://www.emfcamp.org/schedule/2026.json`,
+TLS via `esp_crt_bundle_attach`). Guards: needs ≥32 KB free heap for SSL;
+throttled by `SYNC_PERIOD_MS` (30 min) unless forced.
+
+The EMF feed is a 682 KB JSON array (407 events) that cannot be held in RAM, so
+it is **converted on the fly, chunk by chunk**: `_http_event_handle` feeds each
+HTTP body chunk into `sp_feed()` (`schedule_parse.c`), a chunk-boundary-safe
+streaming state machine. It keeps one event object at a time (stripping the big
+`description` fields), filters `type=="talk"`, maps each occurrence to the badge
+row format, and writes rows straight to `schedule.json.tmp`. The raw feed never
+lands on disk; peak added RAM ~8–10 KB. On clean finish (`sp_ok`) it renames to
+`SCHEDULE_FILE` and calls `ui_event_load()`.
+
+Format written stays the badge format `{"info":<base64 html>,"schedule":[{sort,
+title,day,hour,speaker,location,duration}]}` (the web UI needs the wrapper).
+Day mapping: `EMF_DAY1_DOM=16` → day = day-of-month − 15 (Thu 16→Sun 19 Jul = 1–4).
+Result ~142 talks / ~25 KB. **Rows are in feed order, not time-sorted**
+(streaming can't sort without buffering everything).
+
+`schedule_parse.c/.h` is host-portable (stdio + cJSON only), so the scanner can
+be unit-tested off-device: compile it with clang against the ESP-IDF cJSON and
+feed the real feed at many chunk sizes (down to 1 byte), asserting byte-identical
+output. (Live sync verified on-device 2026-07-15: 682 KB feed → 142 talks.)
+
+To retarget (new event/year) or fall back: edit `sync.url` in `default.json`. An
+offline converter that reshapes the feed and hosting the result on any server is
+a drop-in alternative (point `sync.url` at it).
+
+### On-badge event screen (`badge/ui.c`)
+`ui_event_load()` shows the whole schedule as one scrollable `table_event`,
+sorted day-then-time. Flow: `ui_schedule_build_index()` scans the file once,
+reads each entry's `sort` key (textually, no cJSON), and ranks them into
+`sched_keys`/`sched_rank` (heap-allocated, ~4 KB, NOT static BSS — see memory
+notes); then it streams the file, parses one row at a time (no whole-file DOM),
+and places each row at its sorted rank. Dial buttons use `scroll_up`/`scroll_down`
+(pixel scroll). Loaded **eagerly at boot** in `ui_screen_event_init` (before the
+logo shows). `ui_schedule_reset()` marks it stale after a sync; a lazy trigger in
+`ui_prepare_current_screen` (screen-switch path) rebuilds it.
+
+Two removed approaches (do not reintroduce): auto-pagination via `event_scroll`
+scroll-edge detection (LVGL v7 unreliable → blank/stuck), and freeing the table
+on every screen-leave (broke navigation).
+
+`httpd.c` `schedule_handler` serves the file with `httpd_resp_send_chunk`.
+
+### Memory & performance gotchas (hard-won — READ before touching the event table or AP web)
+- **AP-mode free heap is tight (~16–22 KB).** BLE + Wi-Fi + LVGL eat most of the
+  400 KB. The ~50 KB, 142-row schedule table on top starves LWIP → web server
+  fails to send (`httpd_sock_err: error in send : 11`, EAGAIN). Fix in place:
+  `ui_event_unload()` frees the table + sort index when **AP or STA is activated**
+  (in the admin-screen handlers, `ui.c`), rebuilt lazily on next event view. Also
+  `httpd.c` sets `max_open_sockets=4` + `lru_purge_enable` + longer timeouts to
+  serialise parallel asset bursts (tetris). If heap is ever tight again, the
+  remaining big lever is pausing BLE while AP is active (not done, riskier).
+- **LVGL v7 `lv_table_set_cell_value()` calls `refr_size()` (re-measures EVERY
+  row) on every call** → filling/clearing the 142-row table cell-by-cell is
+  O(n²) (~15 s UI freeze). Fix: manipulate `ext->cell_data` directly —
+  `event_set_cell()` on load (format byte 0 = left-align), free strings directly
+  on unload — and trigger ONE relayout via `lv_table_set_row_cnt(total)`.
+- **`lv_table_set_row_cnt(t, 0)` frees only the pointer array, NOT the cell
+  strings** — free the strings first or leak ~30 KB per cycle.
+- Static buffers reduce AP-mode baseline heap: keep schedule scratch
+  (`sched_keys/rank`, and `sp_state_t` in sync.c) small / heap-allocated.
+
+## STA Wi-Fi / EMF network (`badge/wifi.c`, `data/default.json`)
+
+The STA interface (used only for schedule sync) supports three modes, chosen by
+the `sta` block in `default.json`:
+
+- **Open** — `sta.ssid` set, `sta.password` empty, `sta.enterprise` false/absent.
+- **WPA2-PSK** — `sta.password` non-empty, `sta.enterprise` false.
+- **WPA2/WPA3-Enterprise 802.1X** — `sta.enterprise: true`. Uses the ESP-IDF EAP
+  client (`esp_wpa2.h`, PEAP/EAP-TTLS) via `sta_apply_enterprise()`; sets
+  identity/username/password from `sta.identity`/`sta.username`/`sta.password`,
+  PMF-capable (not required), and does **not** validate the server cert (EMF
+  marks it optional, so no CA cert is embedded).
+
+EMF Camp networks (https://www.emfcamp.org/about/internet):
+- `emf` — WPA3-Enterprise 802.1X (recommended). Generic creds `emf`/`emf` work
+  for anyone (filtered public IP, outbound allowed → HTTPS sync works). This is
+  the current default in `default.json`.
+- `emf-open` — open + OWE. Fallback: set `sta.enterprise:false`,
+  `sta.ssid:"emf-open"`, `sta.password:""`.
+
+STA credentials are NOT editable via the web UI (only AP ssid/pass, web login,
+device name, sync path are — see `update_attribute` in `badge.c`). To change the
+STA network, edit `default.json` and **re-upload the filesystem image** (a
+firmware-only flash keeps the old `settings.json`).
+
+## BLE (`badge/bt.c`, `common/bt_hci_common.c`)
+
+Raw HCI (not NimBLE/Bluedroid high-level API). Advertises the badge and scans
+for peers. `BLE_ADV_MIN/MAX` = 5s intervals, scan interval/window in `bt.h`.
+Nearby badges feed `ble_nodes[]`, consumed by the radar and rssi screens.
+
+## Web app (`public/` → `data/www/`)
+
+Static site served from SPIFFS by `httpd.c`. `public/` is the source, `data/www/`
+is the deployed (minified) copy. Includes a **Tetris** easter egg (click the web
+logo 7×) and the config UI. Endpoints are `/api/v1/*`; `saiyan` is the web pwd.
+
+**IMPORTANT — the `www-build.sh` toolchain is NOT usable here**: `node`/`uglifyjs`/
+`node-sass`/`node-minify` aren't installed and there's no `style.scss` (only
+`style.css`), so the build can't run. The `public/` files are already minified
+and byte-identical to `data/www/`, so **edit BOTH `public/` and `data/www/`
+directly** (same literal string) when changing web JS/HTML. Then `uploadfs`.
+The web schedule sorts client-side by the `sort` field (index.js).
+
+## Branding / event-specific bits (already EMF2026; here for the next retarget)
+
+Event-specific config/branding lives in:
+- `data/default.json` — `sta.*` (network) and `sync.url` (schedule feed).
+- `data/schedule.json` — pre-loaded schedule snapshot (overwritten by a live sync).
+- `EMF_DAY1_DOM` in `sync.c` — day-1 date for the day-number mapping.
+- `public/index.html` + `public/js/index.js` **and** generated `data/www/*` —
+  web UI title/text (edit BOTH; see web-app note).
+- `main/badge/common/img_logo.c` — LVGL C-array logo. The EMF one was built
+  **locally**: `rsvg-convert` an SVG → 300×300 PNG (Pillow), then a Python
+  generator emits the LVGL `CF_TRUE_COLOR_ALPHA` array (all colour-depth
+  variants). Firmware uses `LV_COLOR_DEPTH=16, LV_COLOR_16_SWAP=1`.
+- `main/badge/common/img_radar.c` — radar background image array.
+- Badge/AP name template `Saiyan-%04x` in `badge.c` (`badge_init`).
+
+The WHY2025→EMF2026 rename is done (commit 37be85b): build env is now
+`emf2026-badge` (+ `sdkconfig.emf2026-badge`), README/CI/photos updated. Left
+intentionally: the real GitHub repo URL `CyberSaiyanIT/why2025-badge`, the unused
+`sync.path` fallback, and the KiCad `WHY_LOGO` footprint.
+
+## Build & flash (PlatformIO + ESP-IDF)
+
+- Framework: `espidf`, platform `espressif32@5.4.0`, board
+  `esp32-c3-devkitm-1`. Config in `platformio.ini`. LVGL uses custom heap
+  (`LV_MEM_CUSTOM=1` → LVGL allocs come from the system heap; `LV_MEM_SIZE`
+  ignored). Partitions in `partitions.csv` (SPIFFS `storage` = 1 MB); app
+  sdkconfig in **`sdkconfig.emf2026-badge`** (must match the env name).
+- Build env is **`emf2026-badge`**: `pio run -e emf2026-badge -t upload`
+  (firmware) / `-t uploadfs` (filesystem). The env auto-selects, so plain
+  `pio run` works too.
+- **Filesystem** (SPIFFS, i.e. `data/`) must be uploaded separately from
+  firmware — `default.json`/`schedule.json`/web changes only apply after
+  `uploadfs`; a firmware-only flash keeps the old `settings.json`. Rule of thumb:
+  `main/` → `upload`, `data/` → `uploadfs`.
+- Serial monitor @ 115200. `version.c` (GIT_REV/TAG/BRANCH) is autogenerated at
+  build time (leave it unstaged in commits).
+- To enter download/boot mode: hold left dial (UP) during boot; reset via RST
+  button.
+- **Host-testing C** (no hardware): the schedule parser is host-portable, so it
+  can be compiled with clang against the ESP-IDF cJSON and fed the real feed at
+  adversarial chunk sizes to validate the streaming state machine off-device.
+
+## Conventions / gotchas
+
+- Logging uses `ESP_LOGI(__FILE__, ...)`.
+- `data/` (SPIFFS) and `main/` (firmware) are two independent flash images —
+  remember to reflash the filesystem after editing JSON/web assets.
+- `components/` vendors LVGL (v7), lvgl_esp32_drivers, esp32-button, color, lib8tion.
+- Easter eggs: LED sequences (e.g. rainbow) triggered by input patterns in
+  `led.c`; a "collision" bug between easter eggs and normal flashing was fixed
+  in git history.
+- **`main/CMakeLists.txt` globs `main/badge/*.*` as build SOURCES** — never leave
+  a non-`.c/.h` file (e.g. a stray `.svg`) in `main/badge/`, it breaks the build.
+  (CMake GLOB skips dotfiles, so `.DS_Store` is fine.)
+- macOS TCC blocks the Claude Code process from reading `~/Documents` — assets
+  must be copied into the repo to be accessible.
