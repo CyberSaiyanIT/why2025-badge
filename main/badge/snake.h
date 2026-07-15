@@ -12,6 +12,9 @@
 #define SNAKE_MIN_SPEED 8
 #define SNAKE_STEP_SPEED 3
 
+// high score lives on the SPIFFS filesystem, like Space Invaders (/data/invaders_hi)
+#define SNAKE_HIGHSCORE_FILE "/data/snake_hi"
+
 enum SNAKE_DIR
 {
     SNAKE_DIR_BEGIN = 10,
@@ -30,6 +33,9 @@ typedef struct
     enum SNAKE_DIR dir;
     int size;
     int speed;
+    int score;                       // balls eaten this game
+    uint32_t high;                   // persisted best score
+    lv_obj_t *lbl_score, *lbl_high;  // HUD (black text, top corners)
 } snake_t;
 
 void snake_set_dir(int8_t dir);

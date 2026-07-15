@@ -80,7 +80,9 @@ Long-press either dial to switch screens; short-press to interact.
 2. `screen_radar` — Dragon Ball–style radar of nearby badges
 3. `screen_rssi` — table list of nearby badges + RSSI
 4. `screen_admin` — Wi-Fi admin: AP mode (up) / schedule SYNC (down)
-5. `screen_snake` — Snake game (`badge/snake.c`)
+5. `screen_snake` — Snake game (`badge/snake.c`): 1 point per ball eaten, black
+   SCORE/HIGH labels in the top corners (white screen, kept in foreground); high
+   score persisted to a SPIFFS file (`/data/snake_hi`), same scheme as Invaders.
 6. `screen_invaders` — Space Invaders (`badge/invaders.c`): **UP = move cannon
    left, DOWN = move cannon right, UP+DOWN together = FIRE** (one shot at a time,
    no auto-fire — a both-buttons-down chord in `button_task` that suppresses the
