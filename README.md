@@ -4,14 +4,14 @@
 ![EMF2026 badge front](img/EMF2026_badge_front.png)
 ![EMF2026 badge rear](img/EMF2026_badge_rear.png)
 
-The Cyber Saiyan community designed and developed a special gadget to bring to [EMF Camp 2026](https://www.emfcamp.org/). Come find the Cyber Saiyan crew at camp to grab one of the badges and start playing.
+The Cyber Saiyan community designed and developed a special gadget to bring to [EMF Camp 2026](https://www.emfcamp.org/). This year we don't have our own tent — find us hanging around the Milliways village, where we'll have a few badges on showcase to play with. Come say hi!
 
 ## Useful information:
 
 * To play with and hack the badge, we recommend bringing a **USB Type‑C data cable**
 * The badge is already flashed with the EMF2026 specific firmware
 * We would greatly appreciate any improvements to the project and pull requests.
-* Don't hesitate to come and visit the Cyber Saiyan crew at camp if you need help
+* Don't hesitate to come and find the Cyber Saiyan crew at the Milliways village if you need help
 
 ## Features
 
