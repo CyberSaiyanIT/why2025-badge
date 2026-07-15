@@ -176,7 +176,8 @@ void schedule_sync_handler(bool force) {
         .url = badge_obj.sync_url,
         .event_handler = _http_event_handle,
         .crt_bundle_attach = esp_crt_bundle_attach,  // validate TLS via cert bundle
-        .buffer_size = 2048,        // Limit HTTP buffer size
+        .timeout_ms = 20000,        // generous for slow / high-latency links
+        .buffer_size = 4096,        // response headers (CSP etc.) can be ~1.5 KB
         .buffer_size_tx = 1024,     // Limit TX buffer size
         };
         esp_http_client_handle_t http_client = esp_http_client_init(&http_config);
@@ -184,8 +185,10 @@ void schedule_sync_handler(bool force) {
             ESP_LOGE(__FILE__, "Failed to initialize HTTP client - insufficient memory");
             return;
         }
-        
-        esp_http_client_set_header(http_client, "Content-Type", "application/json");
+
+        // Plain GET: no Content-Type (it's a leftover that some servers dislike on
+        // a bodyless request); send a normal User-Agent instead.
+        esp_http_client_set_header(http_client, "User-Agent", "CyberSaiyanBadge/1.0");
         esp_err_t err = esp_http_client_perform(http_client);
 
         if (err == ESP_OK) {
