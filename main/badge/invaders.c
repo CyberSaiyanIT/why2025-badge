@@ -7,9 +7,28 @@
 // auto-fires (one shot on screen at a time, classic style). Long-press still
 // switches screens. High score is persisted to a file on the SPIFFS
 // filesystem (/data), like the other badge data.
-// Objects are plain LVGL rectangles moved with lv_obj_set_pos (like snake.c).
+// The aliens and cannon are the classic pixel-art sprites (lv_img objects,
+// INDEXED_1BIT, defined in common/img_invaders.c); shots stay plain rects.
+// Sprites/objects are moved with lv_obj_set_pos (like snake.c).
 // The task priority is driven by ui.c (enabled on the invaders screen only).
 // ---------------------------------------------------------------------------
+
+// classic sprites (main/badge/common/img_invaders.c), pixel-doubled x2:
+// 3 alien types x 2 animation frames (white) + the laser base (green).
+LV_IMG_DECLARE(inv_sq_a); LV_IMG_DECLARE(inv_sq_b);   // squid   (top row)
+LV_IMG_DECLARE(inv_cr_a); LV_IMG_DECLARE(inv_cr_b);   // crab    (2nd row)
+LV_IMG_DECLARE(inv_oc_a); LV_IMG_DECLARE(inv_oc_b);   // octopus (lower rows)
+LV_IMG_DECLARE(inv_cannon);
+
+// which alien shape a grid row uses, for the given animation frame
+static const lv_img_dsc_t *alien_sprite(int row, bool frame)
+{
+    switch (row) {
+        case 0:  return frame ? &inv_sq_b : &inv_sq_a;
+        case 1:  return frame ? &inv_cr_b : &inv_cr_a;
+        default: return frame ? &inv_oc_b : &inv_oc_a;
+    }
+}
 
 typedef struct {
     lv_obj_t *cannon;
@@ -25,15 +44,17 @@ typedef struct {
     uint32_t  high;
     lv_obj_t *lbl_score, *lbl_high, *lbl_msg, *msg_bg;
     bool      over;
+    bool      frame;                 // invader animation frame (toggles each step)
     int       move_ctr;              // ticks since last invader jump
     int       speed;                 // ticks between invader jumps
 } inv_game_t;
 
 static inv_game_t g;
 
-// ---- styles (init once) ----
+// ---- styles (init once) — only the shots and the game-over panel need them now;
+//      the aliens and cannon are image sprites ----
 static bool styles_done = false;
-static lv_style_t st_inv, st_cannon, st_bullet, st_bomb, st_msgbg;
+static lv_style_t st_bullet, st_bomb, st_msgbg;
 
 static void style_rect(lv_style_t *s, lv_color_t col)
 {
@@ -48,8 +69,6 @@ static void init_styles(void)
 {
     if (styles_done) return;
     styles_done = true;
-    style_rect(&st_inv,    LV_COLOR_LIME);
-    style_rect(&st_cannon, LV_COLOR_BLUE);
     style_rect(&st_bullet, LV_COLOR_YELLOW);
     style_rect(&st_bomb,   LV_COLOR_RED);
     style_rect(&st_msgbg,  LV_COLOR_BLACK);
@@ -108,16 +127,25 @@ static void reposition_invaders(void)
         if (g.alive[i]) lv_obj_set_pos(g.inv[i], inv_x(i), inv_y(i));
 }
 
+// point each alive invader at its shape's current animation frame
+static void animate_invaders(void)
+{
+    for (int i = 0; i < INV_COUNT; i++)
+        if (g.alive[i]) lv_img_set_src(g.inv[i], alien_sprite(i / INV_COLS, g.frame));
+}
+
 static void spawn_wave(void)
 {
     g.block_x = INV_START_X;
     g.block_y = INV_START_Y;
     g.dir = 1;
+    g.frame = false;
     g.alive_count = INV_COUNT;
     for (int i = 0; i < INV_COUNT; i++) {
         g.alive[i] = true;
         lv_obj_set_hidden(g.inv[i], false);
     }
+    animate_invaders();
     reposition_invaders();
 }
 
@@ -171,14 +199,23 @@ void invaders_reset(lv_obj_t *parent)
     lv_label_set_align(g.lbl_msg, LV_LABEL_ALIGN_CENTER);
     lv_obj_set_hidden(g.lbl_msg, true);
 
-    // cannon (ship) on the bottom row — Y derived from the real screen height
-    g.cannon_y = LV_VER_RES - CANNON_H - 4;
-    g.cannon = make_rect(parent, &st_cannon, CANNON_W, CANNON_H);
+    // cannon (ship) sprite near the bottom — Y derived from the real screen
+    // height, with a generous bottom margin so it clears any panel overscan
+    // (the small green base sits at the very bottom otherwise and gets clipped).
+    g.cannon_y = LV_VER_RES - CANNON_H - CANNON_BOTTOM_MARGIN;
+    g.cannon = lv_img_create(parent, NULL);
+    lv_img_set_src(g.cannon, &inv_cannon);
+    lv_obj_set_size(g.cannon, CANNON_W, CANNON_H);
+    // tint the white cannon sprite green at draw time (arcade base color)
+    lv_obj_set_style_local_image_recolor(g.cannon, LV_IMG_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_LIME);
+    lv_obj_set_style_local_image_recolor_opa(g.cannon, LV_IMG_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_COVER);
     lv_obj_set_pos(g.cannon, (LV_HOR_RES - CANNON_W) / 2, g.cannon_y);
 
-    // invaders
-    for (int i = 0; i < INV_COUNT; i++)
-        g.inv[i] = make_rect(parent, &st_inv, INV_SIZE, INV_SIZE);
+    // invader sprites (shape set per row in animate_invaders / spawn_wave)
+    for (int i = 0; i < INV_COUNT; i++) {
+        g.inv[i] = lv_img_create(parent, NULL);
+        lv_img_set_src(g.inv[i], alien_sprite(i / INV_COLS, false));
+    }
 
     g.bullet = NULL;
     g.score = 0;
@@ -224,7 +261,7 @@ void invaders_task(lv_task_t *arg)
             lv_obj_set_pos(g.bullet, bx, by);
             for (int i = 0; i < INV_COUNT; i++) {
                 if (!g.alive[i]) continue;
-                if (overlap(bx, by, BULLET_W, BULLET_H, inv_x(i), inv_y(i), INV_SIZE, INV_SIZE)) {
+                if (overlap(bx, by, BULLET_W, BULLET_H, inv_x(i), inv_y(i), INV_W, INV_H)) {
                     g.alive[i] = false;
                     lv_obj_set_hidden(g.inv[i], true);
                     g.alive_count--;
@@ -251,11 +288,13 @@ void invaders_task(lv_task_t *arg)
         } else {
             g.block_x = nx;
         }
+        g.frame = !g.frame;          // classic marching wobble
+        animate_invaders();
         reposition_invaders();
 
         // reached the cannon line? -> lose
         for (int i = 0; i < INV_COUNT; i++)
-            if (g.alive[i] && inv_y(i) + INV_SIZE >= g.cannon_y) { game_over(); return; }
+            if (g.alive[i] && inv_y(i) + INV_H >= g.cannon_y) { game_over(); return; }
 
         // occasionally drop a bomb from a random alive invader
         if (g.alive_count > 0 && (rand() % BOMB_CHANCE) == 0) {
@@ -267,7 +306,7 @@ void invaders_task(lv_task_t *arg)
                     if (g.alive[i] && pick-- == 0) { idx = i; break; }
                 if (idx >= 0) {
                     g.bombs[slot] = make_rect(screen_invaders, &st_bomb, BOMB_W, BOMB_H);
-                    lv_obj_set_pos(g.bombs[slot], inv_x(idx) + INV_SIZE / 2, inv_y(idx) + INV_SIZE);
+                    lv_obj_set_pos(g.bombs[slot], inv_x(idx) + INV_W / 2, inv_y(idx) + INV_H);
                 }
             }
         }

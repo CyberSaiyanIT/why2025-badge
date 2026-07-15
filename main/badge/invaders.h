@@ -10,9 +10,10 @@
 #define INV_ROWS       4
 #define INV_COLS       6
 #define INV_COUNT      (INV_ROWS * INV_COLS)
-#define INV_SIZE       18          // invader square, px
+#define INV_W          24          // invader sprite width, px (24x16 sprites)
+#define INV_H          16          // invader sprite height, px
 #define INV_CELL       32          // grid pitch (invader + gap), px
-#define INV_BLOCK_W    ((INV_COLS - 1) * INV_CELL + INV_SIZE)   // block width
+#define INV_BLOCK_W    ((INV_COLS - 1) * INV_CELL + INV_W)   // block width
 #define INV_START_X    20          // initial block left
 #define INV_START_Y    40          // initial block top (below the score line)
 #define INV_HSTEP      6           // horizontal jump per move
@@ -23,9 +24,10 @@
 // NOTE: the LVGL coordinate space here is 320 wide x 240 tall (LV_HOR_RES x
 // LV_VER_RES). The ship's Y is computed at runtime from LV_VER_RES, so it works
 // regardless of resolution/orientation.
-#define CANNON_W       30
-#define CANNON_H       14
+#define CANNON_W       32          // cannon sprite width, px (32x16 sprite, byte-aligned)
+#define CANNON_H       16
 #define CANNON_STEP    12          // move per wheel press
+#define CANNON_BOTTOM_MARGIN 18    // gap below the cannon (clears panel overscan)
 
 // --- shots ---
 #define BULLET_W       3
