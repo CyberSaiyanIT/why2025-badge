@@ -254,6 +254,21 @@ void ui_button_down()
     }
 }
 
+// Set a table cell WITHOUT triggering a relayout (unlike lv_table_set_cell_value,
+// which calls refr_size on every call -> O(n^2) when filling a large table). The
+// caller must trigger a single relayout afterwards (lv_table_set_row_cnt). The
+// format byte 0 == left-aligned, no merge/crop, matching the default cells.
+static void event_set_cell(int row, int col, const char* txt)
+{
+    lv_table_ext_t *ext = lv_obj_get_ext_attr(table_event);
+    uint32_t cell = (uint32_t)row * ext->col_cnt + col;
+    char *p = lv_mem_realloc(ext->cell_data[cell], strlen(txt) + 2);  // +format byte +'\0'
+    if (!p) return;
+    p[0] = 0;
+    strcpy(p + 1, txt);
+    ext->cell_data[cell] = p;
+}
+
 // Fill one 2-cell table row from a parsed schedule item (NULL-safe).
 static void event_fill_row(cJSON* item, int row)
 {
@@ -274,12 +289,12 @@ static void event_fill_row(cJSON* item, int row)
         snprintf(buff + strlen(buff), sizeof(buff) - strlen(buff), "Where: %s\n", location->valuestring);
     if (cJSON_IsString(duration) && strlen(duration->valuestring) > 0)
         snprintf(buff + strlen(buff), sizeof(buff) - strlen(buff), "How long: %s", duration->valuestring);
-    lv_table_set_cell_value(table_event, row, 0, buff);
+    event_set_cell(row, 0, buff);
 
     snprintf(buff, sizeof(buff), "%s\nby %s",
              cJSON_IsString(title)   ? title->valuestring   : "",
              cJSON_IsString(speaker) ? speaker->valuestring : "");
-    lv_table_set_cell_value(table_event, row, 1, buff);
+    event_set_cell(row, 1, buff);
 }
 
 // Open the schedule file and advance past the '[' that starts the schedule
@@ -378,16 +393,20 @@ static void ui_event_unload(void)
 {
     if (!event_loaded) return;
 
-    // NOTE: lv_table_set_row_cnt(t, 0) frees only the cell-pointer array, not
-    // the per-cell strings (LVGL v7) -> it would leak ~30 KB every cycle.
-    // Clear each cell first: set_cell_value("") realloc-shrinks and frees the
-    // old string, then collapse the table.
-    uint16_t rows = lv_table_get_row_cnt(table_event);
-    uint16_t cols = lv_table_get_col_cnt(table_event);
-    for (uint16_t r = 0; r < rows; r++)
-        for (uint16_t c = 0; c < cols; c++)
-            lv_table_set_cell_value(table_event, r, c, "");
-    lv_table_set_row_cnt(table_event, 0);
+    // Free the per-cell strings directly. lv_table_set_row_cnt(t,0) frees only
+    // the pointer array, not the strings (LVGL v7) -> leaks ~30 KB otherwise.
+    // We must NOT clear cells via lv_table_set_cell_value("") because each call
+    // triggers a full table relayout (re-measuring every row) -> ~O(n^2), which
+    // froze the UI for ~15 s on a 142-row schedule. Freeing cell_data directly
+    // is a single O(n) pass with no relayout.
+    lv_table_ext_t *ext = lv_obj_get_ext_attr(table_event);
+    if (ext && ext->cell_data) {
+        uint32_t n = (uint32_t)ext->row_cnt * ext->col_cnt;
+        for (uint32_t i = 0; i < n; i++) {
+            if (ext->cell_data[i]) { lv_mem_free(ext->cell_data[i]); ext->cell_data[i] = NULL; }
+        }
+    }
+    lv_table_set_row_cnt(table_event, 0);   // frees the pointer array (one relayout)
 
     // Also free the sort index; it is rebuilt with the table on next view.
     free(sched_keys); sched_keys = NULL;
@@ -448,6 +467,10 @@ void ui_event_load()
         }
     }
     fclose(fp);
+
+    // Cells were filled directly (no per-cell relayout); trigger ONE relayout
+    // now to compute row heights over the full table (no-op realloc, same count).
+    lv_table_set_row_cnt(table_event, total);
 
     ESP_LOGI(__FILE__, "Schedule loaded: %d/%d rows (sorted)", filled, total);
 }
