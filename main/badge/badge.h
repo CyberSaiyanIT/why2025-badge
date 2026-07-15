@@ -54,7 +54,6 @@ typedef struct {
     bool sta_enterprise;
     char sta_identity[BADGE_BUF_SIZE];
     char sta_username[BADGE_BUF_SIZE];
-    char sync_path[BADGE_BUF_SIZE];
     char sync_url[SYNC_URL_MAX];
 
     // Display brightness settings

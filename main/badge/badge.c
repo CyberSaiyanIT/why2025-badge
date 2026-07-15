@@ -146,22 +146,17 @@ bool update_attribute(int id, char* data) {
         case 3: // Device name
             snprintf(badge_obj.device_name, SIZEOF(badge_obj.device_name), "%s", data);
             break;
-        case 4: // Sync path
-            snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", data);
-            break;
     }
-    
+
     cJSON* json_settings = load_settings();
     cJSON *obj_badge = cJSON_GetObjectItem(json_settings, "badge");
     cJSON *obj_web = cJSON_GetObjectItem(json_settings, "web");
     cJSON *obj_ap = cJSON_GetObjectItem(json_settings, "ap");
-    cJSON *obj_sync = cJSON_GetObjectItem(json_settings, "sync");
 
     json_set_str_value(obj_badge, "name", badge_obj.device_name);
     json_set_str_value(obj_ap, "ssid", badge_obj.ap_ssid);
     json_set_str_value(obj_ap, "password", badge_obj.ap_password);
     json_set_str_value(obj_web, "login", badge_obj.web_login);
-    json_set_str_value(obj_sync, "path", badge_obj.sync_path);
 
     save_settings(json_settings);
     cJSON_Delete(json_settings);
@@ -193,14 +188,12 @@ void badge_init(){
         cJSON *obj_web = cJSON_GetObjectItem(json_settings, "web");
         cJSON *obj_ap = cJSON_GetObjectItem(json_settings, "ap");
         cJSON *obj_sta = cJSON_GetObjectItem(json_settings, "sta");
-        cJSON *obj_sync = cJSON_GetObjectItem(json_settings, "sync");
         cJSON *obj_display = cJSON_GetObjectItem(json_settings, "display");
 
         const char* web_login = json_get_str_value(obj_web, "login");
         const char* sta_ssid = json_get_str_value(obj_sta, "ssid");
         const char* sta_password = json_get_str_value(obj_sta, "password");
-        const char* sync_path = json_get_str_value(obj_sync, "path");
-        
+
         // Load brightness settings with defaults if not present
         int brightness_max = obj_display ? json_get_int_value(obj_display, "brightness_max") : 255;
         int brightness_mid = obj_display ? json_get_int_value(obj_display, "brightness_mid") : 200;
@@ -216,7 +209,6 @@ void badge_init(){
         snprintf(badge_obj.web_login, SIZEOF(badge_obj.web_login), "%s", web_login);
         snprintf(badge_obj.sta_ssid, SIZEOF(badge_obj.sta_ssid), "%s", sta_ssid);
         snprintf(badge_obj.sta_password, SIZEOF(badge_obj.sta_password), "%s", sta_password);
-        snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
 
         // Set brightness values
         badge_obj.brightness_max = (uint8_t)brightness_max;
@@ -228,7 +220,6 @@ void badge_init(){
         json_set_str_value(obj_badge, "name", badge_obj.device_name);
         json_set_str_value(obj_ap, "ssid", badge_obj.ap_ssid);
         json_set_str_value(obj_ap, "password", badge_obj.ap_password);
-        json_set_str_value(obj_sync, "path", badge_obj.sync_path);
 
         // Save to settings.json
         save_settings(json_settings);
@@ -251,8 +242,7 @@ void badge_init(){
     const char* ap_password = json_get_str_value(obj_ap, "password"); // should be empty
     const char* sta_ssid = json_get_str_value(obj_sta, "ssid");
     const char* sta_password = json_get_str_value(obj_sta, "password");
-    const char* sync_path = json_get_str_value(obj_sync, "path");
-    
+
     // Load brightness settings with defaults if not present
     int brightness_max = obj_display ? json_get_int_value(obj_display, "brightness_max") : 255;
     int brightness_mid = obj_display ? json_get_int_value(obj_display, "brightness_mid") : 200;
@@ -271,16 +261,14 @@ void badge_init(){
     snprintf(badge_obj.ap_password, SIZEOF(badge_obj.ap_password), "%s", ap_password);
     snprintf(badge_obj.sta_ssid, SIZEOF(badge_obj.sta_ssid), "%s", sta_ssid);
     snprintf(badge_obj.sta_password, SIZEOF(badge_obj.sta_password), "%s", sta_password);
-    snprintf(badge_obj.sync_path, SIZEOF(badge_obj.sync_path), "%s", sync_path);
 
-    // Full sync URL (optional). Falls back to the legacy cybersaiyan.it host
-    // composed from sync.path when "url" is absent.
+    // Full sync URL from settings ("sync.url").
     cJSON* sync_url_item = cJSON_GetObjectItem(obj_sync, "url");
-    if (cJSON_IsString(sync_url_item) && sync_url_item->valuestring &&
-        strlen(sync_url_item->valuestring) > 0) {
+    if (cJSON_IsString(sync_url_item) && sync_url_item->valuestring) {
         snprintf(badge_obj.sync_url, SYNC_URL_MAX, "%s", sync_url_item->valuestring);
     } else {
-        snprintf(badge_obj.sync_url, SYNC_URL_MAX, "https://cybersaiyan.it/%s", sync_path);
+        badge_obj.sync_url[0] = '\0';
+        ESP_LOGW(__FILE__, "No sync.url configured in settings");
     }
 
     // WPA2/WPA3-Enterprise (802.1X) STA settings (optional keys; default to
