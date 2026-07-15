@@ -11,7 +11,7 @@ The Cyber Saiyan community designed and developed a special gadget to bring to [
 * To play with and hack the badge, we recommend bringing a **USB Type‑C data cable**
 * The badge is already flashed with the EMF2026 specific firmware
 * We would greatly appreciate any improvements to the project and pull requests.
-* Don't hesitate to come and find the Cyber Saiyan crew at the Milliways village if you need help
+* Don't hesitate to come and find the Cyber Saiyan crew at the Milliways village if you're curious and want to say hi
 
 ## Features
 
