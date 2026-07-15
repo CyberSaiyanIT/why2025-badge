@@ -239,7 +239,7 @@ Event-specific config/branding lives in:
 - `main/badge/common/img_radar.c` — radar background image array.
 - Badge/AP name template `Saiyan-%04x` in `badge.c` (`badge_init`).
 
-The WHY2025→EMF2026 rename is done (commit 37be85b): build env is now
+The WHY2025→EMF2026 rename is done: build env is now
 `emf2026-badge` (+ `sdkconfig.emf2026-badge`), README/CI/photos updated. Left
 intentionally: the real GitHub repo URL `CyberSaiyanIT/why2025-badge` and the
 KiCad `WHY_LOGO` footprint.
