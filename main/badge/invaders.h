@@ -36,6 +36,12 @@
 #define BOMB_SPEED     6           // px per tick (downward)
 #define MAX_BOMBS      3
 
+// --- persistence ---
+// High score lives on the SPIFFS filesystem (mounted at /data), like the other
+// badge data (settings.json, schedule.json) — survives reboots and firmware-only
+// reflashes.
+#define HIGHSCORE_FILE "/data/invaders_hi"
+
 // --- pacing (task runs every INVADERS_TICK_MS) ---
 #define INVADERS_TICK_MS   40
 #define INV_SPEED_START    12      // ticks between invader jumps at wave start

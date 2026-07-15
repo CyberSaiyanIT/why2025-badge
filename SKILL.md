@@ -86,7 +86,8 @@ Long-press either dial to switch screens; short-press to interact.
    no auto-fire — a both-buttons-down chord in `button_task` that suppresses the
    move on release). Descending, speeding-up invader block that drops bombs;
    endless waves; game over drawn on a black panel (z-ordered above the invaders);
-   high score persisted in NVS (namespace `invaders`, key `hi`). Ship Y is derived
+   high score persisted to a SPIFFS file (`/data/invaders_hi`, like the other
+   badge data — survives reboots and firmware-only reflashes). Ship Y is derived
    at runtime from `LV_VER_RES` (display is 320×240). `invaders_task` runs only on
    this screen (prio driven by `ui_prepare_current_screen`, reset on entry).
    Gameplay knobs are `#define`s in `invaders.h`.

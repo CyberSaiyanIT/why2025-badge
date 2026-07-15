@@ -1,12 +1,12 @@
 #include "invaders.h"
 #include <string.h>
-#include "nvs.h"
 
 // ---------------------------------------------------------------------------
 // Space Invaders — a compact badge mini-game.
 // Controls: the two dial wheels move the laser cannon left/right; the cannon
 // auto-fires (one shot on screen at a time, classic style). Long-press still
-// switches screens. High score is persisted in NVS.
+// switches screens. High score is persisted to a file on the SPIFFS
+// filesystem (/data), like the other badge data.
 // Objects are plain LVGL rectangles moved with lv_obj_set_pos (like snake.c).
 // The task priority is driven by ui.c (enabled on the invaders screen only).
 // ---------------------------------------------------------------------------
@@ -76,21 +76,21 @@ static bool overlap(int ax, int ay, int aw, int ah, int bx, int by, int bw, int 
 
 static uint32_t load_high(void)
 {
-    nvs_handle_t h; uint32_t v = 0;
-    if (nvs_open("invaders", NVS_READONLY, &h) == ESP_OK) {
-        nvs_get_u32(h, "hi", &v);
-        nvs_close(h);
+    uint32_t v = 0;
+    FILE *fp = fopen(HIGHSCORE_FILE, "r");
+    if (fp) {
+        if (fscanf(fp, "%u", &v) != 1) v = 0;
+        fclose(fp);
     }
     return v;
 }
 
 static void save_high(uint32_t v)
 {
-    nvs_handle_t h;
-    if (nvs_open("invaders", NVS_READWRITE, &h) == ESP_OK) {
-        nvs_set_u32(h, "hi", v);
-        nvs_commit(h);
-        nvs_close(h);
+    FILE *fp = fopen(HIGHSCORE_FILE, "w");
+    if (fp) {
+        fprintf(fp, "%u", (unsigned)v);
+        fclose(fp);
     }
 }
 
