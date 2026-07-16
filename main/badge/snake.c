@@ -70,10 +70,15 @@ void snake_reset(lv_obj_t *parent)
 
     srand(lv_tick_get());
 
-    // high score: load once, then let the just-finished game set a new record
+    // high score: load once at boot. snake.high already tracks the live max
+    // (the eat handler bumps it), so persist it UNCONDITIONALLY here — gating on
+    // score>high would never fire because high was already raised to == score
+    // during play, which is why the record wasn't being saved. Saving the loaded
+    // value at boot is a harmless no-op; snake.high is never below the stored one.
     static bool hi_loaded = false;
     if (!hi_loaded) { snake.high = snake_load_high(); hi_loaded = true; }
-    if (snake.score > (int)snake.high) { snake.high = snake.score; snake_save_high(snake.high); }
+    if (snake.score > (int)snake.high) snake.high = snake.score;
+    snake_save_high(snake.high);
     snake.score = 0;
 
     // HUD labels: black text (white screen), top corners like Space Invaders.

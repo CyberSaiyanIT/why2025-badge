@@ -227,13 +227,16 @@ void invaders_reset(lv_obj_t *parent)
     spawn_wave();
     update_labels();
 
-    if (invaders_task_handle) lv_task_set_prio(invaders_task_handle, LV_TASK_PRIO_LOW);
+    // leave the game paused; the first wheel input (move or fire) starts it,
+    // like Snake — so arriving on the screen doesn't kick off immediately.
 }
 
 void invaders_move_cannon(int8_t dir)
 {
     if (g.over) { invaders_reset(screen_invaders); return; }   // any press replays
     if (!g.cannon) return;
+    // first input starts the (paused) game
+    if (invaders_task_handle) lv_task_set_prio(invaders_task_handle, LV_TASK_PRIO_LOW);
     int x = lv_obj_get_x(g.cannon) + dir * CANNON_STEP;
     if (x < 0) x = 0;
     if (x > LV_HOR_RES - CANNON_W) x = LV_HOR_RES - CANNON_W;
@@ -242,7 +245,10 @@ void invaders_move_cannon(int8_t dir)
 
 void invaders_fire(void)
 {
-    if (g.over || !g.cannon || g.bullet) return;   // one shot on screen at a time
+    if (g.over || !g.cannon) return;
+    // first input starts the (paused) game
+    if (invaders_task_handle) lv_task_set_prio(invaders_task_handle, LV_TASK_PRIO_LOW);
+    if (g.bullet) return;                           // one shot on screen at a time
     g.bullet = make_rect(screen_invaders, &st_bullet, BULLET_W, BULLET_H);
     lv_obj_set_pos(g.bullet, lv_obj_get_x(g.cannon) + CANNON_W / 2 - BULLET_W / 2, g.cannon_y - BULLET_H);
 }
