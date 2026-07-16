@@ -4,7 +4,7 @@
 ![EMF2026 badge front](img/EMF2026_badge_front.png)
 ![EMF2026 badge rear](img/EMF2026_badge_rear.png)
 
-The Cyber Saiyan community designed and developed a special gadget to bring to [EMF Camp 2026](https://www.emfcamp.org/). This year we don't have our own tent — find us hanging around the Milliways village, where we'll have a few badges on showcase to play with. Come say hi!
+The Cyber Saiyan community modified the special WHY 2025 badge to bring to [EMF Camp 2026](https://www.emfcamp.org/). This year we don't have our own tent — find us hanging around the Milliways village, where we'll have a few badges on showcase to play with. Come say hi!
 
 ## Useful information:
 
@@ -84,10 +84,11 @@ Space Invaders! 👾 Roll a Dial Wheel **UP to move the laser cannon left** and
 **DOWN to move it right**, and press **both wheels together to FIRE** at the
 descending invaders. Your score and the all-time high score (saved on the badge)
 are shown at the top. Short-press a wheel to play again after game over.
+![EMF2026 seventh screen](img/screen-7.jpg)
 
 ## Characteristics
 
-The ESP32-C3 chip is the MCU at the core of the EMF2026 Badge, it integrates multiple peripherals to enable communication with the outside world.
+The ESP32-C3 chip is the MCU at the core of the EMF Camp 2026 Badge, it integrates multiple peripherals to enable communication with the outside world.
 The number of available pins is limited to keep the chip package size small. To route all the incoming and outgoing signals a set of software programmable registers controls the pin multiplexer.
 
 ### Peripheral Interfaces
@@ -107,7 +108,7 @@ There are 16 programmable GPIO pins available for:
    * Temperature sensor
 
 ### Devices on board
-The EMF2026 Badge is equipped with a 2.8 inch TFT color LCD screen with 240 x 320 pixels, using the [ST7789](hardware/datasheet/ST7789V.pdf) display controller.
+The EMF Camp 2026 Badge is equipped with a 2.8 inch TFT color LCD screen with 240 x 320 pixels, using the [ST7789](hardware/datasheet/ST7789V.pdf) display controller.
 This display integrates a resistive touchscreen a white LEDs backlight and features an 18-pin standard FPC cable to interface the MCU with a 4-wire SPI bus.
 ___
 The SPI bus signals are available on the connector labeled "SPI" at the top of the badge:
