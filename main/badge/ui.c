@@ -1,7 +1,7 @@
 #include "ui.h"
 #include "led.h"
 
-enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, SCREEN_INVADERS, NUM_SCREENS};
+enum screen_order {SCREEN_LOGO, SCREEN_EVENT, SCREEN_RADAR, SCREEN_RSSI,  SCREEN_ADMIN, SCREEN_SNAKE, SCREEN_INVADERS, SCREEN_RAINBOW, NUM_SCREENS};
 static lv_obj_t* screens[NUM_SCREENS];
 static int8_t current_screen = SCREEN_LOGO;
 
@@ -775,6 +775,20 @@ void ui_screen_invaders_init(){
     screens[SCREEN_INVADERS] = screen_invaders;
 }
 
+void ui_screen_rainbow_init(){
+    // page for the rainbow LED loop easter egg (black background)
+    screen_rainbow = lv_obj_create(NULL, NULL);
+    lv_obj_set_style_local_bg_color(screen_rainbow, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+    lv_obj_set_style_local_bg_opa(screen_rainbow, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_COVER);
+
+    lv_obj_t *lbl = lv_label_create(screen_rainbow, NULL);
+    lv_obj_set_style_local_text_color(lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
+    lv_label_set_text(lbl, "Rainbow loop started...");
+    lv_obj_align(lbl, NULL, LV_ALIGN_CENTER, 0, 0);
+
+    screens[SCREEN_RAINBOW] = screen_rainbow;
+}
+
 void ui_ap_start_handler() {
     ap_started = true;
 
@@ -1016,6 +1030,8 @@ static void ui_init(void)
 
     ui_screen_invaders_init();
 
+    ui_screen_rainbow_init();
+
     radar_task_handle = lv_task_create(ui_radar_task, 2000, LV_TASK_PRIO_OFF, NULL);
     rssi_task_handle = lv_task_create(ui_rssi_task, 2000, LV_TASK_PRIO_OFF, NULL);
     snake_task_handle = lv_task_create(snake_task, 50, LV_TASK_PRIO_OFF, NULL);
@@ -1092,7 +1108,8 @@ void ui_task(void *arg)
 // Rebuild the event table if it was marked stale (e.g. after a sync). The
 // schedule is loaded eagerly at boot, so this is normally a no-op. Also start a
 // fresh Space Invaders game (and enable its task) on entry, and stop the game
-// task when leaving that screen.
+// task when leaving that screen. Same idea for the rainbow LED loop, except
+// that one runs on led_task (not LVGL) so entering/leaving it is just a flag.
 static void ui_prepare_current_screen(void)
 {
     if (current_screen == SCREEN_EVENT && !event_loaded) ui_event_load();
@@ -1102,6 +1119,8 @@ static void ui_prepare_current_screen(void)
     } else if (invaders_task_handle) {
         lv_task_set_prio(invaders_task_handle, LV_TASK_PRIO_OFF);
     }
+
+    set_rainbow_loop_active(current_screen == SCREEN_RAINBOW);
 }
 
 void ui_switch_page_down()

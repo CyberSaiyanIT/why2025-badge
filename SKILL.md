@@ -103,6 +103,17 @@ Long-press either dial to switch screens; short-press to interact.
    or a white palette — a **non-white palette color OR a non-byte-aligned width
    made the sprite fail to render** (the green 26px cannon was invisible until
    fixed this way).
+7. `screen_rainbow` — continuous rainbow LED animation, one 7-LED frame at a
+   time, entirely on `led_task` (its own FreeRTOS task, not LVGL) — see
+   `set_rainbow_loop_active()` in `badge/led.c`/`led.h`. `ui_prepare_current_screen`
+   just flips that flag on entry/exit (`current_screen == SCREEN_RAINBOW`), so
+   the loop starts/stops immediately with screen navigation and never touches
+   the UI task, unlike the old one-shot blocking `rainbow()` (still triggered
+   by a DOWN-press easter egg on the logo screen, unrelated/untouched) — that
+   blocks the caller for ~4s per call and must never be looped from the UI
+   task (see `origin/bad-rainbow-loop`, an unmerged branch that did exactly
+   that and froze the whole badge). Text "Rainbow loop started..." on a black
+   background, matching Invaders' style.
 
 Backlight auto-dims: `BRIGHT_MID_TIMEOUT_MS` 5s → mid, `BRIGHT_OFF_TIMEOUT_MS`
 15s → off.

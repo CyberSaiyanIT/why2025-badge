@@ -86,6 +86,11 @@ descending invaders. Your score and the all-time high score (saved on the badge)
 are shown at the top. Short-press a wheel to play again after game over.
 ![EMF2026 seventh screen](img/screen-7.jpg)
 
+### Eighth Screen
+Rainbow loop! 🌈 A continuous cycling rainbow animation across all 7 front
+RGB LEDs. It starts the moment you arrive on this screen and stops the moment
+you leave it — no need to wait it out.
+
 ## Characteristics
 
 The ESP32-C3 chip is the MCU at the core of the EMF Camp 2026 Badge, it integrates multiple peripherals to enable communication with the outside world.

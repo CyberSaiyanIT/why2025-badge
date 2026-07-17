@@ -7,6 +7,7 @@ static const char *TAG = "strip_ws2812";
 static const uint8_t led_order[] = {2, 6, 1, 0, 4, 5, 3}; // 0: center, 6: top
 static led_strip_t *strip;
 static bool easter_egg_active = false; // Flag to block LED flashing during easter eggs
+static bool rainbow_loop_active = false; // Continuous rainbow animation, driven by led_task
 
 static void i2c_register_write(uint8_t addr, uint8_t reg_addr, uint8_t data)
 {
@@ -225,16 +226,54 @@ void rainbow() {
     set_easter_egg_active(false); // Re-enable LED flashing
 }
 
+// One frame of the continuous rainbow loop: all 7 LEDs at once, evenly spread
+// around the hue wheel and offset by `phase`, which the caller advances each
+// frame to animate the cycle. Non-blocking beyond led_rgb_color's own per-LED
+// refresh delay (~10ms x 7 LEDs).
+static void rainbow_frame(uint8_t phase) {
+    for (int i = 0; i < NUM_LEDS; i++) {
+        hsv_t hsv_color = {
+            .hue = (uint8_t)(phase + i * (256 / NUM_LEDS)),
+            .saturation = 255,
+            .value = 200
+        };
+        led_rgb_color(i, hsv2rgb_rainbow(hsv_color));
+    }
+}
+
+void set_rainbow_loop_active(bool active) {
+    rainbow_loop_active = active;
+    if (!active) {
+        // Leaving the rainbow screen: clear the LEDs rather than leaving them
+        // stuck on whatever colors the loop last painted.
+        for (int i = 0; i < NUM_LEDS; i++) led_rgb_off(i);
+    }
+    ESP_LOGI(__FILE__, "Rainbow loop %s", active ? "STARTED" : "STOPPED");
+}
+
 void set_easter_egg_active(bool active) {
     easter_egg_active = active;
     ESP_LOGI(__FILE__, "Easter egg mode %s", active ? "ENABLED" : "DISABLED");
 }
 
-void led_task(void* arg) 
+void led_task(void* arg)
 {
+    static uint8_t rainbow_phase = 0;
+
     while(1){
+        // Rainbow screen loop takes priority over everything else here. If
+        // led_task is mid-flash() when this flips on, it won't take effect
+        // until that call returns (flash() blocks for several seconds); from
+        // the next loop iteration onward it preempts the normal LED behavior.
+        if (rainbow_loop_active) {
+            rainbow_frame(rainbow_phase);
+            rainbow_phase += 4;
+            vTaskDelay(150 / portTICK_PERIOD_MS);
+            continue;
+        }
+
         ESP_LOGI(__FILE__, "free_heap_size = %lu\n", esp_get_free_heap_size());
-        
+
         // Skip normal LED operations if easter egg is active
         if(easter_egg_active) {
             ESP_LOGI(__FILE__, "Easter egg active, skipping normal LED operations");

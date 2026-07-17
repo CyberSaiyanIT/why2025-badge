@@ -40,4 +40,9 @@ void flash(int period, uint8_t fade_factor);
 
 void set_easter_egg_active(bool active);
 
+// Continuous, non-blocking rainbow LED animation, driven from led_task's own
+// loop (not LVGL) so it never stalls the UI. Toggle on/off from the rainbow
+// screen's enter/leave handling in ui.c.
+void set_rainbow_loop_active(bool active);
+
 #endif // _LED_H

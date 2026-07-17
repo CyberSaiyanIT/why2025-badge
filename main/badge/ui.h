@@ -45,6 +45,7 @@ lv_obj_t *screen_rssi;  // page 3
 lv_obj_t *screen_snake; // page 4
 lv_obj_t *screen_admin; // page 5
 lv_obj_t *screen_invaders; // page 6
+lv_obj_t *screen_rainbow;  // page 7
 
 lv_task_t* snake_task_handle;
 lv_task_t* invaders_task_handle;
