@@ -173,6 +173,23 @@ Pressing the center of the left switch results in the same effect as rotating th
 Note: 
 push the left switch (or rotating the wheel UP) during boot to put the MCU in Joint Download Boot mode to download binary files into flash using UART0 or USB interface. To reset/restart the MCU push the micro switch labeled "RST" on the top left of the badege.
 
+#### Badge stuck on boot / factory reset
+
+If a badge is stuck in a boot loop (serial log repeats `esp_image: invalid segment length 0xffffffff` / `Factory app partition is not bootable`), the firmware image itself is corrupt — most likely from a flash that got interrupted. Fix by reflashing over USB:
+
+1. **Press and hold** the left dial's **center button** (this is the GPIO9 boot-mode strap).
+2. **While still holding it**, connect the USB-C cable to the badge.
+3. **While still holding it**, press and release the **RST** button.
+4. Keep holding the left button for **~2 seconds** after releasing RST, then release it.
+5. Reflash both partitions:
+   ```
+   pio run -e emf2026-badge -t upload
+   pio run -e emf2026-badge -t uploadfs
+   ```
+   (`upload` fixes the corrupted firmware; `uploadfs` refreshes the filesystem — settings/high scores regenerate from defaults on next boot.)
+
+The badge's native USB-JTAG interface will normally re-enumerate on its own after the flash; if `pio` can't find the port automatically, pass it explicitly, e.g. `--upload-port /dev/cu.usbmodemXXXX` (find it with `pio device list`).
+
 During the boot process, the messages by the ROM code can be printed to (Default) UART0 and USB Serial/JTAG controller. 
 ___
 The UART interface and the Strapping (button pin) signals are available on the connector labeled "RS232" at the top of the badge:
