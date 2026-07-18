@@ -103,17 +103,24 @@ Long-press either dial to switch screens; short-press to interact.
    or a white palette — a **non-white palette color OR a non-byte-aligned width
    made the sprite fail to render** (the green 26px cannon was invisible until
    fixed this way).
-7. `screen_rainbow` — continuous rainbow LED animation, one 7-LED frame at a
-   time, entirely on `led_task` (its own FreeRTOS task, not LVGL) — see
-   `set_rainbow_loop_active()` in `badge/led.c`/`led.h`. `ui_prepare_current_screen`
-   just flips that flag on entry/exit (`current_screen == SCREEN_RAINBOW`), so
-   the loop starts/stops immediately with screen navigation and never touches
-   the UI task, unlike the old one-shot blocking `rainbow()` (still triggered
-   by a DOWN-press easter egg on the logo screen, unrelated/untouched) — that
-   blocks the caller for ~4s per call and must never be looped from the UI
-   task (see `origin/bad-rainbow-loop`, an unmerged branch that did exactly
-   that and froze the whole badge). Text "Rainbow loop started..." on a black
-   background, matching Invaders' style.
+7. `screen_rainbow` — 5 selectable continuous LED animations (**Rainbow
+   Chase, Color Wave, Strobe Party, Twinkle Sparkle, Comet Spin**), entirely
+   on `led_task` (its own FreeRTOS task, not LVGL) — see the `rainbow_anims[]`
+   dispatch table + `set_rainbow_loop_active()` / `rainbow_next_animation()` /
+   `rainbow_current_animation_name()` in `badge/led.c`/`led.h`.
+   `ui_prepare_current_screen` flips the active flag on entry/exit
+   (`current_screen == SCREEN_RAINBOW`), always restarting at animation 1; a
+   short press of either wheel (in `ui_button_up`/`ui_button_down`, via
+   `ui_rainbow_next()` in ui.c) advances to the next one, wrapping 5→1, and
+   updates the on-screen label to the new name. Every animation's `step()`
+   does at most a handful of LED writes per call and paces itself with its own
+   tick counter at a shared `RAINBOW_TICK_MS` (60ms) cadence — never a
+   multi-second blocking sequence — so the loop starts/stops immediately with
+   screen navigation and never touches the UI task. Contrast with the old
+   one-shot blocking `rainbow()` (still triggered by a DOWN-press easter egg on
+   the logo screen, unrelated/untouched) — that blocks the caller for ~4s per
+   call and must never be looped from the UI task (see `origin/bad-rainbow-loop`,
+   an unmerged branch that did exactly that and froze the whole badge).
 
 Backlight auto-dims: `BRIGHT_MID_TIMEOUT_MS` 5s → mid, `BRIGHT_OFF_TIMEOUT_MS`
 15s → off.

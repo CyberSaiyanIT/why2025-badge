@@ -14,6 +14,7 @@ static lv_obj_t *admin_switch, *admin_switch_sta, *admin_sync;
 static lv_obj_t *admin_switch_text, *admin_switch_sta_text, *admin_sync_text;
 static lv_obj_t *admin_ssid, *admin_pass;
 static lv_obj_t *admin_client_ip, *admin_gateway_ip;
+static lv_obj_t *rainbow_label;
 
 static bool ap_started = false;
 static bool sta_connected = false;
@@ -52,6 +53,7 @@ static int cmp_sched_order(const void* a, const void* b) {
 void ui_update_ip_info(void);
 void ui_list_all_netifs(void);
 static void ui_event_unload(void);
+static void ui_rainbow_next(void);
 
 void restore_current_task(){
     if(current_screen == SCREEN_RSSI){
@@ -163,6 +165,9 @@ void ui_button_up()
         case SCREEN_INVADERS:
             invaders_move_cannon(-1);   // UP -> move cannon left
             break;
+        case SCREEN_RAINBOW:
+            ui_rainbow_next();          // any short press -> next animation
+            break;
         case SCREEN_ADMIN:
             switch(admin_state){
                 case ADMIN_STATE_OFF: // AP and STA disabled: enable AP
@@ -232,6 +237,9 @@ void ui_button_down()
             break;
         case SCREEN_INVADERS:
             invaders_move_cannon(1);    // DOWN -> move cannon right
+            break;
+        case SCREEN_RAINBOW:
+            ui_rainbow_next();          // any short press -> next animation
             break;
         case SCREEN_ADMIN:
             switch(admin_state){
@@ -775,16 +783,31 @@ void ui_screen_invaders_init(){
     screens[SCREEN_INVADERS] = screen_invaders;
 }
 
+// Refresh the rainbow screen's label to the currently active animation's
+// name, re-centering it (the text length changes between animation names).
+static void ui_rainbow_update_label(void) {
+    lv_label_set_text_fmt(rainbow_label, "%s\n\n(short press:\nnext animation)",
+                          rainbow_current_animation_name());
+    lv_obj_align(rainbow_label, NULL, LV_ALIGN_CENTER, 0, 0);
+}
+
+// Advance to the next LED animation (called on any short press while on the
+// rainbow screen) and update the label to match.
+static void ui_rainbow_next(void) {
+    rainbow_next_animation();
+    ui_rainbow_update_label();
+}
+
 void ui_screen_rainbow_init(){
     // page for the rainbow LED loop easter egg (black background)
     screen_rainbow = lv_obj_create(NULL, NULL);
     lv_obj_set_style_local_bg_color(screen_rainbow, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_BLACK);
     lv_obj_set_style_local_bg_opa(screen_rainbow, LV_OBJ_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_COVER);
 
-    lv_obj_t *lbl = lv_label_create(screen_rainbow, NULL);
-    lv_obj_set_style_local_text_color(lbl, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
-    lv_label_set_text(lbl, "Rainbow loop started...");
-    lv_obj_align(lbl, NULL, LV_ALIGN_CENTER, 0, 0);
+    rainbow_label = lv_label_create(screen_rainbow, NULL);
+    lv_obj_set_style_local_text_color(rainbow_label, LV_LABEL_PART_MAIN, LV_STATE_DEFAULT, LV_COLOR_WHITE);
+    lv_label_set_align(rainbow_label, LV_LABEL_ALIGN_CENTER);
+    ui_rainbow_update_label();
 
     screens[SCREEN_RAINBOW] = screen_rainbow;
 }
@@ -1121,6 +1144,7 @@ static void ui_prepare_current_screen(void)
     }
 
     set_rainbow_loop_active(current_screen == SCREEN_RAINBOW);
+    if (current_screen == SCREEN_RAINBOW) ui_rainbow_update_label(); // resets to animation 1
 }
 
 void ui_switch_page_down()

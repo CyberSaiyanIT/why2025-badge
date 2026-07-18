@@ -87,9 +87,12 @@ are shown at the top. Short-press a wheel to play again after game over.
 ![EMF2026 seventh screen](img/screen-7.jpg)
 
 ### Eighth Screen
-Rainbow loop! 🌈 A continuous cycling rainbow animation across all 7 front
-RGB LEDs. It starts the moment you arrive on this screen and stops the moment
-you leave it — no need to wait it out.
+Rainbow loop! 🌈 A continuous LED animation across all 7 front RGB LEDs —
+great for walking around camp and showing off some lights at night. It starts
+the moment you arrive on this screen and stops the moment you leave it. Short
+press either wheel to cycle through 5 animations: **Rainbow Chase**, **Color
+Wave**, **Strobe Party**, **Twinkle Sparkle**, and **Comet Spin**. The screen
+shows which one is currently playing.
 
 ## Characteristics
 
